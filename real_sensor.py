@@ -25,6 +25,7 @@ class RealSensor(Sensor):
         self.scaledown = 1
         self.hist_frac = 1
         self.k_size = 1
+        self.latest_display_info = None
 
     # take single image to initialize final parameters
     def initialize_parameters(self):
