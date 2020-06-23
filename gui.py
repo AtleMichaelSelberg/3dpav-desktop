@@ -1,4 +1,3 @@
-from datetime import datetime
 import serial
 import time
 import _thread
@@ -17,14 +16,11 @@ from gcode import *
 # example for 115200 baud rate:
 # 0.1 + 1.0 / 115200 * 10.0 * 10.0 ~ 0.1 sec
 #read_timeout = 0.2 #as of June 17, this is too long
-read_timeout = 2 #"fine-tuned" for June 19
+read_timeout = 0.01 #"fine-tuned" for June 19
 baudRate = 115200
 
-class Gui(object):
-  #def __init__(self, win,manager,debug=False):  
+class MyWindow(object):
   def __init__(self, win,debug=False):  
-    print('Creating GUI')
-    #self.manager = manager
     self.debug = debug
     self.lab=Label(win, text="Serial port:")
     self.lab.place(x=60, y=20)
@@ -58,8 +54,6 @@ class Gui(object):
     self.btn_stop=Button(win, text="Stop",command=self.stop,state=DISABLED)
     self.btn_stop.place(x=180, y=310)
 
-    #TODO: add pressure reading
-
     #TODO
     #self.place_dropdown(win,'Tidal volume:', self.tidal_vol, 60, 180) 
     #self.place_dropdown(win,'Respiratory rate:', self.resp_rate, 60, 210) 
@@ -87,6 +81,19 @@ class Gui(object):
       t.start() 
       t.join()
 
+
+  #------------------------- aesthetics
+  def place_dropdown(self, win, txt, vals, xstart=60, ystart=180):
+    self.lab=Label(win, text=txt)
+    self.lab.place(x=xstart, y=ystart)
+    self.box=Combobox(win, values=vals)
+    self.box.place(x=xstart+160, y=ystart)
+  def place_btn(self, win, txt,cmd, xstart=60, ystart=180):
+    self.btn=Button(win, text=txt,command=cmd)
+    self.btn.place(x=xstart, y=ystart)
+
+    
+
   #-------------------------- ventilator methods
   def connect(self):
     if self.txtfld.get() == '': path = '/Users/juliagonski/Documents/Columbia/3DprinterAsVentilator/pronsoleWork/Printator/sim'
@@ -96,8 +103,8 @@ class Gui(object):
     print("Connecting to printer...")
     time.sleep(1)  # Allow time for response
     if self.debug: print("Connection response from printer:", ser_printer.read(ser_printer.inWaiting()))
-    ser_printer.write(str.encode('M400\n'))
-    ser_printer.write(str.encode('M400\n'))
+    #ser_printer.write(str.encode('M400\n'))
+    #ser_printer.write(str.encode('M400\n'))
     answer = ser_printer.readline()
 
     if 'ok' in answer.decode("utf-8", "ignore"):
@@ -143,9 +150,11 @@ class Gui(object):
     quantity = ser_printer.inWaiting()
     while True:
         if quantity > 0:
-               answer += ser_printer.read(quantity)
-               if 'ok' in answer.decode("utf-8", "ignore"): 
-                 if self.debug: print('found ok, breaking')
+               #answer += ser_printer.read(quantity)
+               answer += ser_printer.read(quantity).decode("utf-8","ignore")
+               ##if 'ok' in answer.decode("utf-8", "ignore"):
+               if 'ok' in answer:
+                 if self.debug: print('found DONE, breaking')
                  isItOk = True
                  break
         else:
@@ -159,10 +168,31 @@ class Gui(object):
     if self.debug: print('resulting answer: ', answer)
     return isItOk
 
-  def updateReadings(self, timestamp, latestPressure, latestPPeak):
-      print('Latest Pressure: {0}. Latest PPeak: {1}. Lag (ms): {2:0.2f}'.format(
-          latestPressure, latestPPeak, (datetime.now() - timestamp).total_seconds() * 1000))
-      #TODO: Julia updates GUI here
+  def waitForDONE(self, ser_printer):
+    if self.debug: print('BEGIN waitForDONE')
+    isItOk = False
+    answer = ''
+    quantity = ser_printer.inWaiting()
+    while True:
+        if quantity > 0:
+               #answer += ser_printer.read(quantity)
+               answer += ser_printer.read(quantity).decode("utf-8","ignore")
+               ##if 'ok' in answer.decode("utf-8", "ignore"):
+               #deprecated new firmware 0622 if 'ok' in answer:
+               if 'DONE' in answer:
+                 if self.debug: print('found DONE, breaking')
+                 isItOk = True
+                 break
+        else:
+               time.sleep(read_timeout)  
+        quantity = ser_printer.inWaiting()
+        #if quantity == 0:
+               #if self.debug: print('-------> No lines to read out')
+               #print('ERROR connecting!!!')
+               #raise ImportError()
+               #break
+    if self.debug: print('resulting answer: ', answer)
+    return isItOk
 
 
 #-------------------------------------------------------------------------
@@ -175,9 +205,8 @@ def main():
   if args.debug: debug = True
   
   window=Tk()
-  ##TODO: Selberg initializes manager to feed to GUI init?
   
-  mygui=Gui(window,debug) 
+  mywin=MyWindow(window,debug) 
   window.title('3DPaV Control')
   window.geometry("800x500+10+10")
   window.mainloop()
@@ -185,4 +214,3 @@ def main():
 #-------------------------------------------------------------------------
 if __name__ == "__main__":
   main()
-
