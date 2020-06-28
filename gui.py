@@ -4,6 +4,8 @@ import _thread
 from threading import Thread
 import argparse
 import threading
+from datetime import datetime
+
 
 from tkinter import *
 from tkinter.ttk import Combobox
@@ -19,8 +21,9 @@ from gcode import *
 read_timeout = 0.01 #"fine-tuned" for June 19
 baudRate = 115200
 
-class MyWindow(object):
-  def __init__(self, win,debug=False):  
+class Gui(object):
+  def __init__(self, manager, win, debug=False):
+    self.manager = manager 
     self.debug = debug
     self.lab=Label(win, text="Serial port:")
     self.lab.place(x=60, y=20)
@@ -54,6 +57,14 @@ class MyWindow(object):
     self.btn_stop=Button(win, text="Stop",command=self.stop,state=DISABLED)
     self.btn_stop.place(x=180, y=310)
 
+
+    self.reading_timestamp = Label(win, text="Latest reading")
+    self.reading_timestamp.place(x=480, y=20)
+    self.reading_pressure = Label(win, text="Latest pressure")
+    self.reading_pressure.place(x=480, y=40)
+    self.reading_ppeak = Label(win, text="Latest PPeak")
+    self.reading_ppeak.place(x=480, y=60)
+
     #TODO
     #self.place_dropdown(win,'Tidal volume:', self.tidal_vol, 60, 180) 
     #self.place_dropdown(win,'Respiratory rate:', self.resp_rate, 60, 210) 
@@ -66,6 +77,21 @@ class MyWindow(object):
     self.lookup = None
     self.started_run = False
     self._isOk = False
+
+    self.window = win
+
+  def boot(self):
+    self.window.title('3DPaV Control')
+    self.window.geometry("800x500+10+10")
+    self.window.mainloop()
+
+
+  def updateReadings(self, timestamp, latestPressureValue, latestPPeakValue):
+    delta_seconds = (datetime.now() - timestamp).total_seconds()
+    self.reading_timestamp.configure(text="Latest reading: {:10.2f} seconds ago".format(delta_seconds))
+    self.reading_pressure.configure(text="Latest pressure: {:10.2f}".format(latestPressureValue))
+    self.reading_ppeak.configure(text="Latest PPeak: {:10.2f}".format(latestPPeakValue))
+
 
   @property 
   def isOk(self):
@@ -206,10 +232,8 @@ def main():
   
   window=Tk()
   
-  mywin=MyWindow(window,debug) 
-  window.title('3DPaV Control')
-  window.geometry("800x500+10+10")
-  window.mainloop()
+  mywin=Gui(None, window, debug) 
+
 
 #-------------------------------------------------------------------------
 if __name__ == "__main__":
