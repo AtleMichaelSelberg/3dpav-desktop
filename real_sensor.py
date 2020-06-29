@@ -46,7 +46,7 @@ class RealSensor(Sensor):
 
 
     # initialize parameters and take/send continuous theta measurements
-    def run(self,live_feed=False):
+    def run(self,live_feed=False,find_circle_continuously=False):
         self.live_feed = live_feed
         self.initialize_parameters()
 
@@ -87,7 +87,8 @@ class RealSensor(Sensor):
                     # area of annulus between rad and 1.2*rad circles
                     self.hist_frac = 3.14*(0.44*rad**2)/np.size(img2)
 
-                counter += 1
+                if find_circle_continuously:
+                    counter += 1
 
                 
                 # find theta value of needle. Theta sorting memoized, saves ~10% time
