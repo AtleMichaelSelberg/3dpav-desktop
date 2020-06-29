@@ -46,7 +46,7 @@ class RealSensor(Sensor):
 
 
     # initialize parameters and take/send continuous theta measurements
-    def run(self,live_feed=False,find_circle_continuously=False):
+    def run(self,live_feed=True,find_circle_continuously=False):
         self.live_feed = live_feed
         self.initialize_parameters()
 
