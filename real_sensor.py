@@ -26,14 +26,15 @@ class RealSensor(Sensor):
         self.hist_frac = 1
         self.k_size = 1
         self.latest_display_info = None
+        self.cap = None
 
     # take single image to initialize final parameters
     def initialize_parameters(self):
         
         # wake up camera by giving it something to do and pausing
         # not sure if this is needed outside of my computer...
-        cap = cv2.VideoCapture(self.camera_idx)
-        ret, img = cap.read()
+        self.cap = cv2.VideoCapture(self.camera_idx)
+        ret, img = self.cap.read()
         time.sleep(2)
 
         img2,crop_scale = self.get_bw_image()   
@@ -110,7 +111,7 @@ class RealSensor(Sensor):
 
         # When everything done, release the capture
         if self.live_feed:
-            cap.release()
+            self.cap.release()
             cv2.destroyAllWindows()
 
 
@@ -145,9 +146,8 @@ class RealSensor(Sensor):
     # and optionally flips and/or crops image to square
     def get_bw_image(self):
         
-        # take and capture image
-        cap = cv2.VideoCapture(self.camera_idx)
-        ret, img = cap.read()
+        # capture image
+        ret, img = self.cap.read()
 
         S = np.shape(img)
 
