@@ -6,7 +6,6 @@ import argparse
 import threading
 from datetime import datetime
 
-
 from tkinter import *
 from tkinter.ttk import Combobox
 
@@ -64,6 +63,9 @@ class Gui(object):
     self.reading_pressure.place(x=480, y=40)
     self.reading_ppeak = Label(win, text="Latest PPeak")
     self.reading_ppeak.place(x=480, y=60)
+    self.reading_timestamp_value = None
+    Thread(target=self.timestampDisplayThread, args=[]).start()
+
 
     #TODO
     #self.place_dropdown(win,'Tidal volume:', self.tidal_vol, 60, 180) 
@@ -85,13 +87,21 @@ class Gui(object):
     self.window.geometry("800x500+10+10")
     self.window.mainloop()
 
+  def timestampDisplayThread(self):
+    while True:
+      self.updateTimestampDisplay()
+      time.sleep(0.01)
 
   def updateReadings(self, timestamp, latestPressureValue, latestPPeakValue):
-    delta_seconds = (datetime.now() - timestamp).total_seconds()
-    self.reading_timestamp.configure(text="Latest reading: {:10.2f} seconds ago".format(delta_seconds))
+    self.reading_timestamp_value = timestamp
     self.reading_pressure.configure(text="Latest pressure: {:10.2f}".format(latestPressureValue))
     self.reading_ppeak.configure(text="Latest PPeak: {:10.2f}".format(latestPPeakValue))
+    self.updateTimestampDisplay()
 
+  def updateTimestampDisplay(self):
+    if self.reading_timestamp_value is not None:
+      delta_seconds = (datetime.now() - self.reading_timestamp_value).total_seconds()
+      self.reading_timestamp.configure(text="Latest reading: {:10.2f} seconds ago".format(delta_seconds))
 
   @property 
   def isOk(self):
