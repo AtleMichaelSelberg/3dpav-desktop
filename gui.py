@@ -16,7 +16,7 @@ from gcode import *
 # example for 115200 baud rate:
 # 0.1 + 1.0 / 115200 * 10.0 * 10.0 ~ 0.1 sec
 #read_timeout = 0.2 #as of June 17, this is too long
-read_timeout = 0.01 #"fine-tuned" for June 19
+read_timeout = 0.5 #"fine-tuned" for June 19
 baudRate = 115200
 
 class MyWindow(object):
@@ -76,10 +76,11 @@ class MyWindow(object):
     if self.debug: print('isOk being updated to '+str(new_value))
     self._isOk = new_value
     if self.started_run and new_value == True: 
-      if self.debug: print('adding another run thread with '+str(self.lookup))
-      t = Thread(target = g_run, args =(self,self.lookup,self.debug )) 
-      t.start() 
-      t.join()
+      if self.debug: print('adding another run with '+str(self.lookup))
+      g_run(self,self.lookup,self.debug)
+      #t = Thread(target = g_run, args =(self,self.lookup,self.debug )) 
+      #t.start() 
+      #t.join()
 
 
   #------------------------- aesthetics
@@ -137,6 +138,7 @@ class MyWindow(object):
     #Start first thread, join subsequent ones 
     t_orig = Thread(target = g_run, args =(self,self.lookup,self.debug )) 
     t_orig.start() 
+    #t_orig.join()
 
   def stop(self):
     self.started_run = False
@@ -154,7 +156,7 @@ class MyWindow(object):
                answer += ser_printer.read(quantity).decode("utf-8","ignore")
                ##if 'ok' in answer.decode("utf-8", "ignore"):
                if 'ok' in answer:
-                 if self.debug: print('found DONE, breaking')
+                 if self.debug: print('found ok, breaking')
                  isItOk = True
                  break
         else:
@@ -169,18 +171,19 @@ class MyWindow(object):
     return isItOk
 
   def waitForDONE(self, ser_printer):
-    if self.debug: print('BEGIN waitForDONE')
+    if self.debug: print('----- BEGIN waitForDONE')
     isItOk = False
     answer = ''
     quantity = ser_printer.inWaiting()
     while True:
         if quantity > 0:
+               if self.debug: print('----- reading what the printer has to say: ', ser_printer.read(quantity).decode("utf-8","ignore"))
                #answer += ser_printer.read(quantity)
                answer += ser_printer.read(quantity).decode("utf-8","ignore")
                ##if 'ok' in answer.decode("utf-8", "ignore"):
                #deprecated new firmware 0622 if 'ok' in answer:
-               if 'DONE' in answer:
-                 if self.debug: print('found DONE, breaking')
+               if 'DECOMPRESSDONE' in answer:
+                 if self.debug: print('----- found DECMOMPRESSDONE in answer')
                  isItOk = True
                  break
         else:
@@ -191,7 +194,7 @@ class MyWindow(object):
                #print('ERROR connecting!!!')
                #raise ImportError()
                #break
-    if self.debug: print('resulting answer: ', answer)
+    if self.debug: print('----- resulting answer of concatented printer output (should end in DECOMPRESSDONE): ', answer)
     return isItOk
 
 
