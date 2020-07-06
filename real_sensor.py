@@ -95,7 +95,9 @@ class RealSensor(Sensor):
                 # find theta value of needle. Theta sorting memoized, saves ~10% time
                 theta = find_needle4(img2,center_pt,R)
 
-                self.manager.updateReadings(theta)
+
+
+                self.manager.updateReadings(self.convert_theta_to_inH2O(theta))
 
                 self.latest_display_info = {
                     'rad': rad,
@@ -168,3 +170,10 @@ class RealSensor(Sensor):
             
         #Make black and white, and return (image, image_fractional_size)
         return cv2.cvtColor(img, cv2.COLOR_BGR2GRAY),img_frac
+
+
+    def convert_theta_to_inH2O(self,theta):
+        # 0.89 is location of 0 in H20
+        # 5.46 is location of 35 in H20
+        
+        return ((theta-0.89)/(5.46-0.89))*35
