@@ -4,6 +4,7 @@ import _thread
 from threading import Thread
 import argparse
 import threading
+from datetime import datetime
 
 from tkinter import *
 from tkinter.ttk import Combobox
@@ -19,8 +20,9 @@ from gcode import *
 read_timeout = 0.5 #"fine-tuned" for June 19
 baudRate = 115200
 
-class MyWindow(object):
-  def __init__(self, win,debug=False):  
+class Gui(object):
+  def __init__(self, manager, win, debug=False):
+    self.manager = manager 
     self.debug = debug
     self.lab=Label(win, text="Serial port:")
     self.lab.place(x=60, y=20)
@@ -54,6 +56,17 @@ class MyWindow(object):
     self.btn_stop=Button(win, text="Stop",command=self.stop,state=DISABLED)
     self.btn_stop.place(x=180, y=310)
 
+
+    self.reading_timestamp = Label(win, text="Latest reading")
+    self.reading_timestamp.place(x=480, y=20)
+    self.reading_pressure = Label(win, text="Latest pressure")
+    self.reading_pressure.place(x=480, y=40)
+    self.reading_ppeak = Label(win, text="Latest PPeak")
+    self.reading_ppeak.place(x=480, y=60)
+    self.reading_timestamp_value = None
+    Thread(target=self.timestampDisplayThread, args=[]).start()
+
+
     #TODO
     #self.place_dropdown(win,'Tidal volume:', self.tidal_vol, 60, 180) 
     #self.place_dropdown(win,'Respiratory rate:', self.resp_rate, 60, 210) 
@@ -67,6 +80,29 @@ class MyWindow(object):
     self.started_run = False
     self._isOk = False
 
+    self.window = win
+
+  def boot(self):
+    self.window.title('3DPaV Control')
+    self.window.geometry("800x500+10+10")
+    self.window.mainloop()
+
+  def timestampDisplayThread(self):
+    while True:
+      self.updateTimestampDisplay()
+      time.sleep(0.01)
+
+  def updateReadings(self, timestamp, latestPressureValue, latestPPeakValue):
+    self.reading_timestamp_value = timestamp
+    self.reading_pressure.configure(text="Latest pressure: {:10.2f}".format(latestPressureValue))
+    self.reading_ppeak.configure(text="Latest PPeak: {:10.2f}".format(latestPPeakValue))
+    self.updateTimestampDisplay()
+
+  def updateTimestampDisplay(self):
+    if self.reading_timestamp_value is not None:
+      delta_seconds = (datetime.now() - self.reading_timestamp_value).total_seconds()
+      self.reading_timestamp.configure(text="Latest reading: {:10.2f} seconds ago".format(delta_seconds))
+
   @property 
   def isOk(self):
     return self._isOk
@@ -78,9 +114,8 @@ class MyWindow(object):
     if self.started_run and new_value == True: 
       if self.debug: print('adding another run with '+str(self.lookup))
       g_run(self,self.lookup,self.debug)
+      #deprecated? keep it all on one thread for now 
       #t = Thread(target = g_run, args =(self,self.lookup,self.debug )) 
-      #t.start() 
-      #t.join()
 
 
   #------------------------- aesthetics
@@ -138,7 +173,6 @@ class MyWindow(object):
     #Start first thread, join subsequent ones 
     t_orig = Thread(target = g_run, args =(self,self.lookup,self.debug )) 
     t_orig.start() 
-    #t_orig.join()
 
   def stop(self):
     self.started_run = False
@@ -178,9 +212,7 @@ class MyWindow(object):
     while True:
         if quantity > 0:
                if self.debug: print('----- reading what the printer has to say: ', ser_printer.read(quantity).decode("utf-8","ignore"))
-               #answer += ser_printer.read(quantity)
                answer += ser_printer.read(quantity).decode("utf-8","ignore")
-               ##if 'ok' in answer.decode("utf-8", "ignore"):
                #deprecated new firmware 0622 if 'ok' in answer:
                if 'DECOMPRESSDONE' in answer:
                  if self.debug: print('----- found DECMOMPRESSDONE in answer')
@@ -209,10 +241,8 @@ def main():
   
   window=Tk()
   
-  mywin=MyWindow(window,debug) 
-  window.title('3DPaV Control')
-  window.geometry("800x500+10+10")
-  window.mainloop()
+  mywin=Gui(None, window, debug) 
+
 
 #-------------------------------------------------------------------------
 if __name__ == "__main__":
