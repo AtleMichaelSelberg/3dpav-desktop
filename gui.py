@@ -63,6 +63,8 @@ class Gui(object):
     self.reading_pressure.place(x=480, y=40)
     self.reading_ppeak = Label(win, text="Latest PPeak")
     self.reading_ppeak.place(x=480, y=60)
+    self.reading_sample_rate = Label(win, text="Sample Rate")
+    self.reading_sample_rate.place(x=480, y=80)
     self.reading_timestamp_value = None
     Thread(target=self.timestampDisplayThread, args=[]).start()
 
@@ -92,10 +94,11 @@ class Gui(object):
       self.updateTimestampDisplay()
       time.sleep(0.01)
 
-  def updateReadings(self, timestamp, latestPressureValue, latestPPeakValue):
+  def updateReadings(self, timestamp, latestPressureValue, latestPPeakValue, sampleRate):
     self.reading_timestamp_value = timestamp
     self.reading_pressure.configure(text="Latest pressure: {:10.2f}".format(latestPressureValue))
     self.reading_ppeak.configure(text="Latest PPeak: {:10.2f}".format(latestPPeakValue))
+    self.reading_sample_rate.configure(text="Sample rate (ms): {:10.2f}".format(sampleRate * 1000))
     self.updateTimestampDisplay()
 
   def updateTimestampDisplay(self):
