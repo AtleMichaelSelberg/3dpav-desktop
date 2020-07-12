@@ -17,7 +17,7 @@ from gcode import *
 # example for 115200 baud rate:
 # 0.1 + 1.0 / 115200 * 10.0 * 10.0 ~ 0.1 sec
 #read_timeout = 0.2 #as of June 17, this is too long
-read_timeout = 0.01 #"fine-tuned" for June 19
+read_timeout = 0.5 #"fine-tuned" for June 19
 baudRate = 115200
 
 class Gui(object):
@@ -57,14 +57,41 @@ class Gui(object):
     self.btn_stop.place(x=180, y=310)
 
 
+
+
+
     self.reading_timestamp = Label(win, text="Latest reading")
     self.reading_timestamp.place(x=480, y=20)
     self.reading_pressure = Label(win, text="Latest pressure")
     self.reading_pressure.place(x=480, y=40)
     self.reading_ppeak = Label(win, text="Latest PPeak")
     self.reading_ppeak.place(x=480, y=60)
+    self.reading_sample_rate = Label(win, text="Sample Rate")
+    self.reading_sample_rate.place(x=480, y=80)
     self.reading_timestamp_value = None
     Thread(target=self.timestampDisplayThread, args=[]).start()
+
+   
+    self.min_alarm_value_var = StringVar()
+    self.min_alarm_value_var.set("0")
+    self.min_alarm_value_var.trace("w", self.min_alarm_value_validate)
+    self.min_alarm_value = 0
+    self.min_alarm_enabled = BooleanVar(False)
+    self.max_alarm_value_var = StringVar()
+    self.max_alarm_value_var.set("50")
+    self.max_alarm_value_var.trace("w", self.max_alarm_value_validate)
+    self.max_alarm_value = 50
+    self.max_alarm_enabled = BooleanVar(False)
+    
+    self.min_alarm_enabled_checkbox = Checkbutton(win, text="Enabled Min Pressure Alarm", variable=self.min_alarm_enabled)
+    self.min_alarm_enabled_checkbox.place(x=480, y=120)
+    self.min_alarm_value_input = Entry(win, textvariable=self.min_alarm_value_var)
+    self.min_alarm_value_input.place(x=480, y=140)
+
+    self.max_alarm_enabled_checkbox = Checkbutton(win, text="Enabled Max Pressure Alarm", variable=self.max_alarm_enabled)
+    self.max_alarm_enabled_checkbox.place(x=480, y=160)
+    self.max_alarm_value_input = Entry(win, textvariable=self.max_alarm_value_var)
+    self.max_alarm_value_input.place(x=480, y=180)
 
 
     #TODO
@@ -92,10 +119,37 @@ class Gui(object):
       self.updateTimestampDisplay()
       time.sleep(0.01)
 
-  def updateReadings(self, timestamp, latestPressureValue, latestPPeakValue):
+  def min_alarm_value_validate(self, *args):
+    raw_min_value = re.match("(^-?[0-9]+)", self.min_alarm_value_var.get()) 
+    if (raw_min_value):
+      self.min_alarm_value = int(raw_min_value.group(0))
+    str_min_value = str(self.min_alarm_value)
+    if (str_min_value != self.min_alarm_value_var.get()):
+      self.min_alarm_value_var.set(str_min_value)
+    return True
+
+  def max_alarm_value_validate(self, *args):
+    raw_max_value = re.match("(^-?[0-9]+)", self.max_alarm_value_var.get()) 
+    if (raw_max_value):
+      self.max_alarm_value = int(raw_max_value.group(0))
+    str_max_value = str(self.max_alarm_value)
+    if (str_max_value != self.max_alarm_value_var.get()):
+      self.max_alarm_value_var.set(str_max_value)
+    return True
+
+
+  def updateReadings(self, timestamp, latestPressureValue, latestPPeakValue, sampleRate):
     self.reading_timestamp_value = timestamp
     self.reading_pressure.configure(text="Latest pressure: {:10.2f}".format(latestPressureValue))
     self.reading_ppeak.configure(text="Latest PPeak: {:10.2f}".format(latestPPeakValue))
+    self.reading_sample_rate.configure(text="Sample rate (ms): {:10.2f}".format(sampleRate * 1000))
+
+    if (self.max_alarm_enabled.get() and (latestPressureValue >= self.max_alarm_value)):
+      print('OH SHIT, WE TOO HIGH')
+
+    if (self.min_alarm_enabled.get() and (latestPressureValue <= self.min_alarm_value)):
+      print('OH FUCK, WE TOO LOW')
+
     self.updateTimestampDisplay()
 
   def updateTimestampDisplay(self):
@@ -112,10 +166,10 @@ class Gui(object):
     if self.debug: print('isOk being updated to '+str(new_value))
     self._isOk = new_value
     if self.started_run and new_value == True: 
-      if self.debug: print('adding another run thread with '+str(self.lookup))
-      t = Thread(target = g_run, args =(self,self.lookup,self.debug )) 
-      t.start() 
-      t.join()
+      if self.debug: print('adding another run with '+str(self.lookup))
+      g_run(self,self.lookup,self.debug)
+      #deprecated? keep it all on one thread for now 
+      #t = Thread(target = g_run, args =(self,self.lookup,self.debug )) 
 
 
   #------------------------- aesthetics
@@ -190,7 +244,7 @@ class Gui(object):
                answer += ser_printer.read(quantity).decode("utf-8","ignore")
                ##if 'ok' in answer.decode("utf-8", "ignore"):
                if 'ok' in answer:
-                 if self.debug: print('found DONE, breaking')
+                 if self.debug: print('found ok, breaking')
                  isItOk = True
                  break
         else:
@@ -205,18 +259,17 @@ class Gui(object):
     return isItOk
 
   def waitForDONE(self, ser_printer):
-    if self.debug: print('BEGIN waitForDONE')
+    if self.debug: print('----- BEGIN waitForDONE')
     isItOk = False
     answer = ''
     quantity = ser_printer.inWaiting()
     while True:
         if quantity > 0:
-               #answer += ser_printer.read(quantity)
+               if self.debug: print('----- reading what the printer has to say: ', ser_printer.read(quantity).decode("utf-8","ignore"))
                answer += ser_printer.read(quantity).decode("utf-8","ignore")
-               ##if 'ok' in answer.decode("utf-8", "ignore"):
                #deprecated new firmware 0622 if 'ok' in answer:
-               if 'DONE' in answer:
-                 if self.debug: print('found DONE, breaking')
+               if 'DECOMPRESSDONE' in answer:
+                 if self.debug: print('----- found DECMOMPRESSDONE in answer')
                  isItOk = True
                  break
         else:
@@ -227,7 +280,7 @@ class Gui(object):
                #print('ERROR connecting!!!')
                #raise ImportError()
                #break
-    if self.debug: print('resulting answer: ', answer)
+    if self.debug: print('----- resulting answer of concatented printer output (should end in DECOMPRESSDONE): ', answer)
     return isItOk
 
 

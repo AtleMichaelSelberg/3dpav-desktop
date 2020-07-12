@@ -3,6 +3,8 @@ from datetime import datetime
 
 
 PPEAK_EXPIRATION_SECONDS = 3.0
+SAMPLE_RATE_WINDOW = 5.0
+READING_RELEVANCE = max([PPEAK_EXPIRATION_SECONDS, SAMPLE_RATE_WINDOW])
 
 
 class Reading():
@@ -36,12 +38,22 @@ class Manager():
         now = datetime.now()
         
         self.readings.append(Reading(self.latestPressureValue, stamp))
-        self.readings = [r for r in self.readings if ((now - r.stamp).total_seconds() < PPEAK_EXPIRATION_SECONDS)]
-        self.latestPPeakValue = max([r.value for r in self.readings])
+        self.readings = [r for r in self.readings if ((now - r.stamp).total_seconds() < READING_RELEVANCE)]
         
+        ppeak_readings = [r for r in self.readings if ((now - r.stamp).total_seconds() < PPEAK_EXPIRATION_SECONDS)]
+        self.latestPPeakValue = max([r.value for r in ppeak_readings])
+        
+        sample_rate_readings = [r for r in self.readings if ((now - r.stamp).total_seconds() < SAMPLE_RATE_WINDOW)]
+        if len(sample_rate_readings) < 2:
+            self.sampleRate = 0
+        else:
+            stamps_only = [r.stamp for r in sample_rate_readings]
+            self.sampleRate = (max(stamps_only) - min(stamps_only)).total_seconds() / (len(sample_rate_readings) - 1)
+
         updateParams = {
             'latestPressureValue': self.latestPressureValue,
             'latestPPeakValue': self.latestPPeakValue,
+            'sampleRate': self.sampleRate,
             'timestamp': stamp
         }
         if (self.gui):
@@ -52,11 +64,13 @@ class Manager():
     def postToNetworkSync(self, params):
         latestPressureValue = params.get('latestPressureValue')
         latestPPeakValue = params.get('latestPPeakValue')
+        sampleRate = params.get('sampleRate')
         timestamp = params.get('timestamp')
         self.network.updateReadings(timestamp, latestPressureValue)
 
     def updateGuiSync(self, params):
         latestPressureValue = params.get('latestPressureValue')
         latestPPeakValue = params.get('latestPPeakValue')
+        sampleRate = params.get('sampleRate')
         timestamp = params.get('timestamp')
-        self.gui.updateReadings(timestamp, latestPressureValue, latestPPeakValue)
+        self.gui.updateReadings(timestamp, latestPressureValue, latestPPeakValue, sampleRate)

@@ -2,22 +2,22 @@ import time
 import threading
 
 d_protocol_inhale={
-"300mL_32BPM_1:2":"M555 F4600 Z13 Y39\n",
-"400mL_12BPM_1:2":"M555 F2100 Z17 Y51\n",
-"400mL_32BPM_1:2":"M555 F6200 Z17 Y51\n",
+"300mL_32BPM_1:2":"M555 F5500 Z13 Y39\n",
+"400mL_12BPM_1:2":"M555 F2100 Z16.5 Y49.5\n",
+"400mL_32BPM_1:2":"M555 F7600 Z16.5 Y49.5\n",
 "500mL_12BPM_1:2":"M555 F2400 Z19 Y57\n",
-"750mL_20BPM_1:2":"M555 F5800 Z27 Y81\n",
-"900mL_16BPM_1:2":"M555 F5500 Z32 Y96\n",
-"1000mL_12BPM_1:2":"M555 F4500 Z35 Y105\n",
+"750mL_20BPM_1:2":"M555 F6400 Z26.5 Y79.5\n",
+"900mL_16BPM_1:2":"M555 F6000 Z32 Y96\n",
+"1000mL_12BPM_1:2":"M555 F4400 Z35 Y105\n",
 }
 d_protocol_exhale={
-"300mL_32BPM_1:2":"M556 F2300 Z0 Y0\n",
+"300mL_32BPM_1:2":"M556 F2750 Z0 Y0\n",
 "400mL_12BPM_1:2":"M556 F1050 Z0 Y0\n",
-"400mL_32BPM_1:2":"M556 F3100 Z0 Y0\n",
+"400mL_32BPM_1:2":"M556 F3800 Z0 Y0\n",
 "500mL_12BPM_1:2":"M556 F1200 Z0 Y0\n",
-"750mL_20BPM_1:2":"M556 F2900 Z0 Y0\n",
-"900mL_16BPM_1:2":"M556 F2750 Z0 Y0\n",
-"1000mL_12BPM_1:2":"M556 F2250 Z0 Y0\n",
+"750mL_20BPM_1:2":"M556 F3200 Z0 Y0\n",
+"900mL_16BPM_1:2":"M556 F3000 Z0 Y0\n",
+"1000mL_12BPM_1:2":"M556 F2200 Z0 Y0\n",
 }
 
 def g_init(self,debug=False):
@@ -60,7 +60,7 @@ def g_run(self,lookup,debug=False):
   #if debug: print('buffer after sleep/flush:', self.printer.inWaiting())
   #if debug: print('g_run, isOk: ', self.isOk)
   isItOk = self.waitForDONE(self.printer)
-  if debug: print('done with thread, setting threadDone and updating self.isOk')
+  if debug: print('done with one ventilation, updating self.isOk')
   self.isOk = isItOk
   
 
