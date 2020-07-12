@@ -6,6 +6,9 @@ import argparse
 import threading
 from datetime import datetime
 
+import pyglet
+from pyglet.media import Player, load
+
 from tkinter import *
 from tkinter.ttk import Combobox
 
@@ -19,6 +22,8 @@ from gcode import *
 #read_timeout = 0.2 #as of June 17, this is too long
 read_timeout = 0.5 #"fine-tuned" for June 19
 baudRate = 115200
+
+
 
 class Gui(object):
   def __init__(self, manager, win, debug=False):
@@ -93,6 +98,13 @@ class Gui(object):
     self.max_alarm_value_input = Entry(win, textvariable=self.max_alarm_value_var)
     self.max_alarm_value_input.place(x=480, y=180)
 
+    self.trigger_max_alert = False
+    self.trigger_min_alert = False
+
+    self.player = None
+    Thread(target=self.pygletThread, args=[]).start()
+    Thread(target=self.alarmThread, args=[]).start()
+
 
     #TODO
     #self.place_dropdown(win,'Tidal volume:', self.tidal_vol, 60, 180) 
@@ -114,10 +126,18 @@ class Gui(object):
     self.window.geometry("800x500+10+10")
     self.window.mainloop()
 
+  def pygletThread(self):
+    self.player = Player()
+    source = pyglet.resource.media('red_alert.wav')#load('./red_alert.mp3')
+    self.player.queue(source)
+    self.player.loop = True
+    window = pyglet.window.Window()
+    pyglet.app.run()
+
   def timestampDisplayThread(self):
     while True:
       self.updateTimestampDisplay()
-      time.sleep(0.01)
+      time.sleep(0.1)
 
   def min_alarm_value_validate(self, *args):
     raw_min_value = re.match("(^-?[0-9]+)", self.min_alarm_value_var.get()) 
@@ -138,17 +158,27 @@ class Gui(object):
     return True
 
 
+  def alarmThread(self):
+    while True:
+      if (self.player):
+        if (self.trigger_max_alert or self.trigger_min_alert):
+          if not self.player.playing:
+            print('START ALERT')
+            self.player.play()
+        else:
+          if self.player.playing:
+            print('STOP ALERT')
+            self.player.pause()
+      time.sleep(0.1)
+
   def updateReadings(self, timestamp, latestPressureValue, latestPPeakValue, sampleRate):
     self.reading_timestamp_value = timestamp
     self.reading_pressure.configure(text="Latest pressure: {:10.2f}".format(latestPressureValue))
     self.reading_ppeak.configure(text="Latest PPeak: {:10.2f}".format(latestPPeakValue))
     self.reading_sample_rate.configure(text="Sample rate (ms): {:10.2f}".format(sampleRate * 1000))
 
-    if (self.max_alarm_enabled.get() and (latestPressureValue >= self.max_alarm_value)):
-      print('OH SHIT, WE TOO HIGH')
-
-    if (self.min_alarm_enabled.get() and (latestPressureValue <= self.min_alarm_value)):
-      print('OH FUCK, WE TOO LOW')
+    self.trigger_max_alert = self.max_alarm_enabled.get() and (latestPressureValue >= self.max_alarm_value)
+    self.trigger_min_alert = self.min_alarm_enabled.get() and (latestPressureValue <= self.min_alarm_value)
 
     self.updateTimestampDisplay()
 
