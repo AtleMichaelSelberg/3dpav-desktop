@@ -15,11 +15,12 @@ class Network():
         return self.uuid and self.token
 
     def updateReadings(self, timestamp, latestPressure):
-        r = requests.post(BASE_SERVER_URL + 'post-data-source', data={
-            'uuid': self.uuid,
-            'token': self.token,
-            'value': latestPressure,
-            'timestamp': timestamp.timestamp() * 1000,
-            'error_message': None,
-            'unit': 'CMH20',
-        })
+        pass
+        #r = requests.post(BASE_SERVER_URL + 'post-data-source', data={
+        #    'uuid': self.uuid,
+        #    'token': self.token,
+        #    'value': latestPressure,
+        #    'timestamp': timestamp.timestamp() * 1000,
+        #    'error_message': None,
+        #    'unit': 'CMH20',
+        #})
