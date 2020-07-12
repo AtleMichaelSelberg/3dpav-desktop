@@ -176,4 +176,5 @@ class RealSensor(Sensor):
         # 0.89 is location of 0 in H20
         # 5.46 is location of 35 in H20
         
-        return ((theta-0.89)/(5.46-0.89))*35
+        #return ((theta-0.89)/(5.46-0.89))*35
+        return (((theta*57.2958)-42)/(270))*35
