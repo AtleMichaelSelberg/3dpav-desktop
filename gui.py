@@ -164,6 +164,7 @@ class Gui(object):
         if (self.trigger_max_alert or self.trigger_min_alert):
           if not self.player.playing:
             print('START ALERT')
+            self.player.seek(0)
             self.player.play()
         else:
           if self.player.playing:
