@@ -131,7 +131,7 @@ class Gui(object):
     source = pyglet.resource.media('red_alert.wav')#load('./red_alert.mp3')
     self.player.queue(source)
     self.player.loop = True
-    window = pyglet.window.Window()
+    #window = pyglet.window.Window()
     pyglet.app.run()
 
   def timestampDisplayThread(self):
