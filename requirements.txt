@@ -3,4 +3,4 @@ scipy==1.4.1
 opencv-python==4.2.0.34
 requests==2.23.0
 serial==0.0.97
-pyglet==1.4.1
+pyglet==1.5.7
