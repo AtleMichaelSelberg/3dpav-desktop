@@ -14,6 +14,9 @@ from tkinter.ttk import Combobox
 
 from gcode import *
 
+from settings import INCHES_TO_CENIMETERS
+
+
 # read_timeout is depends on port speed
 # with following formula it works:
 # 0.1 sec + 1.0 sec / baud rate (bits per second) * 10.0 bits (per character) * 10.0 times
@@ -22,7 +25,7 @@ from gcode import *
 #read_timeout = 0.2 #as of June 17, this is too long
 read_timeout = 0.5 #"fine-tuned" for June 19
 baudRate = 115200
-
+PRESSURE_UPPER_LIMIT = 60
 
 
 class Gui(object):
@@ -64,34 +67,41 @@ class Gui(object):
 
 
 
-
-    self.reading_timestamp = Label(win, text="Latest reading")
-    self.reading_timestamp.place(x=480, y=20)
-    self.reading_pressure = Label(win, text="Latest pressure")
-    self.reading_pressure.place(x=480, y=40)
-    self.reading_ppeak = Label(win, text="Latest PPeak")
-    self.reading_ppeak.place(x=480, y=60)
+    self.reading_pressure = Label(win, text="Latest pressure (cmH20)")
+    self.reading_pressure.place(x=480, y=20)
+    self.reading_ppeak = Label(win, text="Latest PPeak (cmH20)")
+    self.reading_ppeak.place(x=480, y=40)
+    self.reading_timestamp = Label(win, text="Latest reading age (seconds)")
+    self.reading_timestamp.place(x=480, y=60)
     self.reading_sample_rate = Label(win, text="Sample Rate")
     self.reading_sample_rate.place(x=480, y=80)
     self.reading_timestamp_value = None
+
+    self.reading_pressure_inches = Label(win, text="Latest pressure (inH20)")
+    self.reading_pressure_inches.place(x=480, y=400)
+
     Thread(target=self.timestampDisplayThread, args=[]).start()
 
    
-    self.pressure_options = [i for i in range(0,51)]
+    self.pressure_options = [i for i in range(0, PRESSURE_UPPER_LIMIT + 1)]
     self.max_alarm_enabled = BooleanVar(False)
     self.min_alarm_enabled = BooleanVar(False)
 
     self.min_alarm_enabled_checkbox = Checkbutton(win, text="Enabled Min Pressure Alarm", variable=self.min_alarm_enabled)
     self.min_alarm_enabled_checkbox.place(x=480, y=120)
+    self.min_alarm_label = Label(win, text="Minimum Pressure (cmH20)")
+    self.min_alarm_label.place(x=480, y=140)
     self.min_alarm_value_input = Combobox(win, values=self.pressure_options)
     self.min_alarm_value_input.current("0")
-    self.min_alarm_value_input.place(x=480, y=140)
+    self.min_alarm_value_input.place(x=480, y=160)
 
     self.max_alarm_enabled_checkbox = Checkbutton(win, text="Enabled Max Pressure Alarm", variable=self.max_alarm_enabled)
-    self.max_alarm_enabled_checkbox.place(x=480, y=160)
+    self.max_alarm_enabled_checkbox.place(x=480, y=180)
+    self.max_alarm_label = Label(win, text="Maximum Pressure (cmH20)")
+    self.max_alarm_label.place(x=480, y=200)
     self.max_alarm_value_input = Combobox(win, values=self.pressure_options)
-    self.max_alarm_value_input.current("50")
-    self.max_alarm_value_input.place(x=480, y=180)
+    self.max_alarm_value_input.current(str(PRESSURE_UPPER_LIMIT))
+    self.max_alarm_value_input.place(x=480, y=220)
 
     self.trigger_max_alert = False
     self.trigger_min_alert = False
@@ -151,9 +161,10 @@ class Gui(object):
 
   def updateReadings(self, timestamp, latestPressureValue, latestPPeakValue, sampleRate):
     self.reading_timestamp_value = timestamp
-    self.reading_pressure.configure(text="Latest pressure: {:10.2f}".format(latestPressureValue))
-    self.reading_ppeak.configure(text="Latest PPeak: {:10.2f}".format(latestPPeakValue))
-    self.reading_sample_rate.configure(text="Sample rate (ms): {:10.2f}".format(sampleRate * 1000))
+    self.reading_pressure.configure(text="Latest Pressure (cmH20): {:10.2f}".format(latestPressureValue))
+    self.reading_pressure_inches.configure(text="Latest Pressure (inH20): {:10.2f}".format(latestPressureValue / INCHES_TO_CENIMETERS))
+    self.reading_ppeak.configure(text="Latest PPeak (cmH20): {:10.2f}".format(latestPPeakValue))
+    self.reading_sample_rate.configure(text="Sample Rate (ms): {:10.2f}".format(sampleRate * 1000))
 
     self.trigger_max_alert = self.max_alarm_enabled.get() and (latestPressureValue >= int(self.max_alarm_value_input.get()))
     self.trigger_min_alert = self.min_alarm_enabled.get() and (latestPressureValue <= int(self.min_alarm_value_input.get()))

@@ -1,5 +1,6 @@
 from threading import Thread
 from datetime import datetime
+from settings import INCHES_TO_CENIMETERS
 
 
 PPEAK_EXPIRATION_SECONDS = 3.0
@@ -25,10 +26,10 @@ class Manager():
     def setNetwork(self, network):
         self.network = network
 
-    def updateReadings(self, latestPressureValue, stamp=None):
+    def updateReadings(self, latestPressureValueInInches, stamp=None):
         stamp = stamp or datetime.now()
         Thread(target=self.updateReadingsSync, args=[{
-            'value': latestPressureValue,
+            'value': latestPressureValueInInches * INCHES_TO_CENIMETERS,
             'stamp': stamp
         }]).start()
 
