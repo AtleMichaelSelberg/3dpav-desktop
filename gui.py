@@ -26,6 +26,7 @@ from settings import INCHES_TO_CENIMETERS
 read_timeout = 0.5 #"fine-tuned" for June 19
 baudRate = 115200
 PRESSURE_UPPER_LIMIT = 60
+LOOP_TIMEOUT_SECONDS = 0.5
 
 
 class Gui(object):
@@ -103,10 +104,16 @@ class Gui(object):
     self.max_alarm_value_input.current(str(PRESSURE_UPPER_LIMIT))
     self.max_alarm_value_input.place(x=480, y=220)
 
-    self.trigger_max_alert = False
-    self.trigger_min_alert = False
+
+    self.test_alarm =Button(win, text="Test Alarm", command=self.test_alarm)
+    self.test_alarm.place(x=480, y=260)
+    self.clear_alarm =Button(win, text="Clear Alarm", command=self.clear_alarm)
+    self.clear_alarm.place(x=480, y=300)
+
+    self.alarm_active = False
 
     self.player = None
+    self.last_seek = datetime.now()
     Thread(target=self.pygletThread, args=[]).start()
     Thread(target=self.alarmThread, args=[]).start()
 
@@ -133,10 +140,8 @@ class Gui(object):
 
   def pygletThread(self):
     self.player = Player()
-    source = pyglet.resource.media('red_alert.wav')#load('./red_alert.mp3')
+    source = pyglet.resource.media('red_alert.wav')
     self.player.queue(source)
-    self.player.loop = True
-    #window = pyglet.window.Window()
     pyglet.app.run()
 
   def timestampDisplayThread(self):
@@ -144,14 +149,28 @@ class Gui(object):
       self.updateTimestampDisplay()
       time.sleep(0.1)
 
+  def test_alarm(self):
+    self.toggle_alarm(True)
+  def clear_alarm(self):
+    self.toggle_alarm(False)
+  def toggle_alarm(self, isOn):
+    self.alarm_active = isOn
+    if (isOn):
+      self.window['bg'] = 'red'
+    else:
+      self.window['bg'] = 'lightgrey'
+
 
   def alarmThread(self):
     while True:
+      now = datetime.now()
+      if ((now - self.last_seek).total_seconds() > LOOP_TIMEOUT_SECONDS):
+        self.player.seek(0)
+        self.last_seek = now
       if (self.player):
-        if (self.trigger_max_alert or self.trigger_min_alert):
+        if (self.alarm_active):
           if not self.player.playing:
             print('START ALERT')
-            self.player.seek(0)
             self.player.play()
         else:
           if self.player.playing:
@@ -166,8 +185,10 @@ class Gui(object):
     self.reading_ppeak.configure(text="Latest PPeak (cmH20): {:10.2f}".format(latestPPeakValue))
     self.reading_sample_rate.configure(text="Sample Rate (ms): {:10.2f}".format(sampleRate * 1000))
 
-    self.trigger_max_alert = self.max_alarm_enabled.get() and (latestPressureValue >= int(self.max_alarm_value_input.get()))
-    self.trigger_min_alert = self.min_alarm_enabled.get() and (latestPressureValue <= int(self.min_alarm_value_input.get()))
+    trigger_max_alert = self.max_alarm_enabled.get() and (latestPressureValue >= int(self.max_alarm_value_input.get()))
+    trigger_min_alert = self.min_alarm_enabled.get() and (latestPressureValue <= int(self.min_alarm_value_input.get()))
+    if (trigger_min_alert or trigger_max_alert):
+      self.toggle_alarm(True)
 
     self.updateTimestampDisplay()
 
