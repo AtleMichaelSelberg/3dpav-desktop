@@ -77,25 +77,20 @@ class Gui(object):
     Thread(target=self.timestampDisplayThread, args=[]).start()
 
    
-    self.min_alarm_value_var = StringVar()
-    self.min_alarm_value_var.set("0")
-    self.min_alarm_value_var.trace("w", self.min_alarm_value_validate)
-    self.min_alarm_value = 0
-    self.min_alarm_enabled = BooleanVar(False)
-    self.max_alarm_value_var = StringVar()
-    self.max_alarm_value_var.set("50")
-    self.max_alarm_value_var.trace("w", self.max_alarm_value_validate)
-    self.max_alarm_value = 50
+    self.pressure_options = [i for i in range(0,51)]
     self.max_alarm_enabled = BooleanVar(False)
-    
+    self.min_alarm_enabled = BooleanVar(False)
+
     self.min_alarm_enabled_checkbox = Checkbutton(win, text="Enabled Min Pressure Alarm", variable=self.min_alarm_enabled)
     self.min_alarm_enabled_checkbox.place(x=480, y=120)
-    self.min_alarm_value_input = Entry(win, textvariable=self.min_alarm_value_var)
+    self.min_alarm_value_input = Combobox(win, values=self.pressure_options)
+    self.min_alarm_value_input.current("0")
     self.min_alarm_value_input.place(x=480, y=140)
 
     self.max_alarm_enabled_checkbox = Checkbutton(win, text="Enabled Max Pressure Alarm", variable=self.max_alarm_enabled)
     self.max_alarm_enabled_checkbox.place(x=480, y=160)
-    self.max_alarm_value_input = Entry(win, textvariable=self.max_alarm_value_var)
+    self.max_alarm_value_input = Combobox(win, values=self.pressure_options)
+    self.max_alarm_value_input.current("50")
     self.max_alarm_value_input.place(x=480, y=180)
 
     self.trigger_max_alert = False
@@ -139,24 +134,6 @@ class Gui(object):
       self.updateTimestampDisplay()
       time.sleep(0.1)
 
-  def min_alarm_value_validate(self, *args):
-    raw_min_value = re.match("(^-?[0-9]+)", self.min_alarm_value_var.get()) 
-    if (raw_min_value):
-      self.min_alarm_value = int(raw_min_value.group(0))
-    str_min_value = str(self.min_alarm_value)
-    if (str_min_value != self.min_alarm_value_var.get()):
-      self.min_alarm_value_var.set(str_min_value)
-    return True
-
-  def max_alarm_value_validate(self, *args):
-    raw_max_value = re.match("(^-?[0-9]+)", self.max_alarm_value_var.get()) 
-    if (raw_max_value):
-      self.max_alarm_value = int(raw_max_value.group(0))
-    str_max_value = str(self.max_alarm_value)
-    if (str_max_value != self.max_alarm_value_var.get()):
-      self.max_alarm_value_var.set(str_max_value)
-    return True
-
 
   def alarmThread(self):
     while True:
@@ -178,8 +155,8 @@ class Gui(object):
     self.reading_ppeak.configure(text="Latest PPeak: {:10.2f}".format(latestPPeakValue))
     self.reading_sample_rate.configure(text="Sample rate (ms): {:10.2f}".format(sampleRate * 1000))
 
-    self.trigger_max_alert = self.max_alarm_enabled.get() and (latestPressureValue >= self.max_alarm_value)
-    self.trigger_min_alert = self.min_alarm_enabled.get() and (latestPressureValue <= self.min_alarm_value)
+    self.trigger_max_alert = self.max_alarm_enabled.get() and (latestPressureValue >= int(self.max_alarm_value_input.get()))
+    self.trigger_min_alert = self.min_alarm_enabled.get() and (latestPressureValue <= int(self.min_alarm_value_input.get()))
 
     self.updateTimestampDisplay()
 
