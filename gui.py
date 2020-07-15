@@ -204,7 +204,7 @@ class Gui(object):
     now = datetime.now()
     min_alarm_interval = float(self.min_alarm_interval_input.get())
     max_alarm_interval = float(self.max_alarm_interval_input.get())
-    self.readings = [r for r in self.readings if ((now - r.stamp).total_seconds() < max([min_alarm_interval, max_alarm_interval]))]
+    self.readings = [r for r in self.readings if ((now - r.stamp).total_seconds() < (2 * max([min_alarm_interval, max_alarm_interval])))]
 
 
     trigger_max_alert = False
