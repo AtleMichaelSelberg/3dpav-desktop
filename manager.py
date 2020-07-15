@@ -1,17 +1,12 @@
 from threading import Thread
 from datetime import datetime
-from settings import INCHES_TO_CENIMETERS
+from settings import INCHES_TO_CENIMETERS, Reading
 
 
 PPEAK_EXPIRATION_SECONDS = 3.0
 SAMPLE_RATE_WINDOW = 5.0
 READING_RELEVANCE = max([PPEAK_EXPIRATION_SECONDS, SAMPLE_RATE_WINDOW])
 
-
-class Reading():
-    def __init__(self, value, stamp):
-        self.value = value
-        self.stamp = stamp
 
 
 class Manager():
