@@ -14,7 +14,7 @@ from tkinter.ttk import Combobox
 
 from gcode import *
 
-from settings import INCHES_TO_CENIMETERS
+from settings import INCHES_TO_CENIMETERS, Reading
 
 
 # read_timeout is depends on port speed
@@ -26,7 +26,9 @@ from settings import INCHES_TO_CENIMETERS
 read_timeout = 0.5 #"fine-tuned" for June 19
 baudRate = 115200
 PRESSURE_UPPER_LIMIT = 60
+INTERVAL_UPPER_LIMIT = 10
 LOOP_TIMEOUT_SECONDS = 0.5
+
 
 
 class Gui(object):
@@ -66,7 +68,7 @@ class Gui(object):
     self.btn_stop.place(x=180, y=310)
 
 
-
+    self.historical_readings = []
 
     self.reading_pressure = Label(win, text="Latest pressure (cmH20)")
     self.reading_pressure.place(x=480, y=20)
@@ -79,36 +81,47 @@ class Gui(object):
     self.reading_timestamp_value = None
 
     self.reading_pressure_inches = Label(win, text="Latest pressure (inH20)")
-    self.reading_pressure_inches.place(x=480, y=400)
+    self.reading_pressure_inches.place(x=480, y=500)
 
     Thread(target=self.timestampDisplayThread, args=[]).start()
 
-   
+    self.readings = []
     self.pressure_options = [i for i in range(0, PRESSURE_UPPER_LIMIT + 1)]
+    self.interval_options = [i for i in range(0, INTERVAL_UPPER_LIMIT + 1)]
     self.max_alarm_enabled = BooleanVar(False)
     self.min_alarm_enabled = BooleanVar(False)
 
     self.min_alarm_enabled_checkbox = Checkbutton(win, text="Enabled Min Pressure Alarm", variable=self.min_alarm_enabled)
     self.min_alarm_enabled_checkbox.place(x=480, y=120)
-    self.min_alarm_label = Label(win, text="Minimum Pressure (cmH20)")
-    self.min_alarm_label.place(x=480, y=140)
-    self.min_alarm_value_input = Combobox(win, values=self.pressure_options)
-    self.min_alarm_value_input.current("0")
-    self.min_alarm_value_input.place(x=480, y=160)
+    self.min_alarm_threshold_label = Label(win, text="Alarm Threshold (cmH20)")
+    self.min_alarm_threshold_label.place(x=480, y=140)
+    self.min_alarm_threshold_input = Combobox(win, values=self.pressure_options)
+    self.min_alarm_threshold_input.current("0")
+    self.min_alarm_threshold_input.place(x=480, y=160)
+    self.min_alarm_interval_label = Label(win, text="Alarm Interval (seconds)")
+    self.min_alarm_interval_label.place(x=480, y=180)
+    self.min_alarm_interval_input = Combobox(win, values=self.interval_options)
+    self.min_alarm_interval_input.current("3")
+    self.min_alarm_interval_input.place(x=480, y=200)
 
     self.max_alarm_enabled_checkbox = Checkbutton(win, text="Enabled Max Pressure Alarm", variable=self.max_alarm_enabled)
-    self.max_alarm_enabled_checkbox.place(x=480, y=180)
-    self.max_alarm_label = Label(win, text="Maximum Pressure (cmH20)")
-    self.max_alarm_label.place(x=480, y=200)
-    self.max_alarm_value_input = Combobox(win, values=self.pressure_options)
-    self.max_alarm_value_input.current(str(PRESSURE_UPPER_LIMIT))
-    self.max_alarm_value_input.place(x=480, y=220)
+    self.max_alarm_enabled_checkbox.place(x=480, y=240)
+    self.max_alarm_threshold_label = Label(win, text="Maximum Pressure (cmH20)")
+    self.max_alarm_threshold_label.place(x=480, y=260)
+    self.max_alarm_threshold_input = Combobox(win, values=self.pressure_options)
+    self.max_alarm_threshold_input.current(str(PRESSURE_UPPER_LIMIT))
+    self.max_alarm_threshold_input.place(x=480, y=280)
+    self.max_alarm_interval_label = Label(win, text="Alarm Interval (seconds)")
+    self.max_alarm_interval_label.place(x=480, y=300)
+    self.max_alarm_interval_input = Combobox(win, values=self.interval_options)
+    self.max_alarm_interval_input.current("3")
+    self.max_alarm_interval_input.place(x=480, y=320)
 
 
     self.test_alarm =Button(win, text="Test Alarm", command=self.test_alarm)
-    self.test_alarm.place(x=480, y=260)
+    self.test_alarm.place(x=480, y=360)
     self.clear_alarm =Button(win, text="Clear Alarm", command=self.clear_alarm)
-    self.clear_alarm.place(x=480, y=300)
+    self.clear_alarm.place(x=480, y=400)
 
     self.alarm_active = False
 
@@ -180,13 +193,34 @@ class Gui(object):
 
   def updateReadings(self, timestamp, latestPressureValue, latestPPeakValue, sampleRate):
     self.reading_timestamp_value = timestamp
+    self.readings.append(Reading(latestPressureValue, timestamp))
+
     self.reading_pressure.configure(text="Latest Pressure (cmH20): {:10.2f}".format(latestPressureValue))
     self.reading_pressure_inches.configure(text="Latest Pressure (inH20): {:10.2f}".format(latestPressureValue / INCHES_TO_CENIMETERS))
     self.reading_ppeak.configure(text="Latest PPeak (cmH20): {:10.2f}".format(latestPPeakValue))
     self.reading_sample_rate.configure(text="Sample Rate (ms): {:10.2f}".format(sampleRate * 1000))
 
-    trigger_max_alert = self.max_alarm_enabled.get() and (latestPressureValue >= int(self.max_alarm_value_input.get()))
-    trigger_min_alert = self.min_alarm_enabled.get() and (latestPressureValue <= int(self.min_alarm_value_input.get()))
+    
+    now = datetime.now()
+    min_alarm_interval = float(self.min_alarm_interval_input.get())
+    max_alarm_interval = float(self.max_alarm_interval_input.get())
+    self.readings = [r for r in self.readings if ((now - r.stamp).total_seconds() < max([min_alarm_interval, max_alarm_interval]))]
+
+
+    trigger_max_alert = False
+    if (self.max_alarm_enabled.get()):
+      max_samples = [r for r in self.readings if ((now - r.stamp).total_seconds() < max_alarm_interval)]
+      if (len(max_samples) < len(self.readings)):
+        max_threshold = int(self.max_alarm_threshold_input.get())
+        trigger_max_alert = len([r for r in max_samples if r.value < max_threshold]) == 0
+
+    trigger_min_alert = False
+    if (self.min_alarm_enabled.get()):
+      min_samples = [r for r in self.readings if ((now - r.stamp).total_seconds() < min_alarm_interval)]
+      if (len(min_samples) < len(self.readings)):
+        min_threshold = int(self.min_alarm_threshold_input.get())
+        trigger_min_alert = len([r for r in min_samples if r.value > min_threshold]) == 0
+        
     if (trigger_min_alert or trigger_max_alert):
       self.toggle_alarm(True)
 
