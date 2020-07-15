@@ -124,6 +124,13 @@ class Gui(object):
     self.clear_alarm.place(x=480, y=400)
 
     self.alarm_active = False
+    self.alarm_messages = []
+    self.alarms_messages_var = StringVar()
+    self.alarms_messages_label = Label(win, textvariable=self.alarms_messages_var, font=("Helvetica", 32))
+    self.alarms_messages_label.place(x=60, y=360)
+    self.alarms_messages_label['bg'] = 'lightgrey'
+    self.alarms_messages_label['fg'] = 'red'
+    
 
     self.player = None
     self.last_seek = datetime.now()
@@ -163,15 +170,18 @@ class Gui(object):
       time.sleep(0.1)
 
   def test_alarm(self):
-    self.toggle_alarm(True)
+    self.add_alarm("Test Alarm")
   def clear_alarm(self):
-    self.toggle_alarm(False)
-  def toggle_alarm(self, isOn):
-    self.alarm_active = isOn
-    if (isOn):
-      self.window['bg'] = 'red'
-    else:
-      self.window['bg'] = 'lightgrey'
+    self.alarm_active = False
+    self.alarm_messages = []
+    self.alarms_messages_label['bg'] = 'lightgrey'
+    self.window['bg'] = 'lightgrey'
+  def add_alarm(self, alarm_message):
+    self.alarm_active = True
+    self.alarm_messages = list(set(self.alarm_messages + [alarm_message]))
+    self.alarms_messages_label['bg'] = 'white'
+    self.window['bg'] = 'red'
+      
 
 
   def alarmThread(self):
@@ -199,6 +209,7 @@ class Gui(object):
     self.reading_pressure_inches.configure(text="Latest Pressure (inH20): {:10.2f}".format(latestPressureValue / INCHES_TO_CENIMETERS))
     self.reading_ppeak.configure(text="Latest PPeak (cmH20): {:10.2f}".format(latestPPeakValue))
     self.reading_sample_rate.configure(text="Sample Rate (ms): {:10.2f}".format(sampleRate * 1000))
+    self.alarms_messages_var.set(", \n".join(self.alarm_messages))
 
     
     now = datetime.now()
@@ -221,8 +232,10 @@ class Gui(object):
         min_threshold = int(self.min_alarm_threshold_input.get())
         trigger_min_alert = len([r for r in min_samples if r.value > min_threshold]) == 0
         
-    if (trigger_min_alert or trigger_max_alert):
-      self.toggle_alarm(True)
+    if trigger_min_alert:
+      self.add_alarm("Min Pressure Alarm")
+    if trigger_max_alert:
+      self.add_alarm("Max Pressure Alarm")
 
     self.updateTimestampDisplay()
 
