@@ -155,7 +155,7 @@ class Gui(object):
 
   def boot(self):
     self.window.title('3DPaV Control')
-    self.window.geometry("800x500+10+10")
+    self.window.geometry("800x550+10+10")
     self.window.mainloop()
 
   def pygletThread(self):
