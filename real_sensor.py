@@ -177,4 +177,8 @@ class RealSensor(Sensor):
         # 5.46 is location of 35 in H20
         
         #return ((theta-0.89)/(5.46-0.89))*35
-        return (((theta*57.2958)-42)/(270))*35
+        #return (((theta*57.2958)-42)/(270))*35
+        if ((((theta*57.2958)-42)/(270))*35) < 1:
+            return 0
+        else:
+            return (((theta*57.2958)-42)/(270))*35
