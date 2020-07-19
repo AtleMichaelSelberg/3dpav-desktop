@@ -133,7 +133,11 @@ class RealSensor(Sensor):
                 img2 = cv2.circle(img2, center_pt, int(rad), (255,255,255), 1) 
 
                 # Display the resulting frame
-                cv2.imshow('frame',img2)
+                winname = "Pressure Gauge (inH2O)"
+                cv2.namedWindow(winname)        # Create a named window
+                cv2.moveWindow(winname, 541,0)  # Move it to (0,0)
+                cv2.resizeWindow(winname, 480, 563)
+                cv2.imshow(winname, img2)
                 if cv2.waitKey(1) & 0xFF == ord('q'):
                     self.running = False
 
