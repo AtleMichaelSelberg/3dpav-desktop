@@ -27,6 +27,15 @@ read_timeout = 0.5 #"fine-tuned" for June 19
 baudRate = 115200
 PRESSURE_UPPER_LIMIT = 60
 INTERVAL_UPPER_LIMIT = 10
+
+INTERVAL_OPTIONS = [{
+  'label': 'IMMEDIATELY',
+  'value': 0.1
+}] + [{'label': '{0} seconds'.format(i), 'value': float(i)} for i in range(1, 11)]
+INTERVAL_LABELS = [i['label'] for i in INTERVAL_OPTIONS]
+INTERVAL_OPTIONS_MAP = dict([(i['label'], i['value']) for i in INTERVAL_OPTIONS])
+MAX_INTERVAL_VALUE = max([i['value'] for i in INTERVAL_OPTIONS])
+
 LOOP_TIMEOUT_SECONDS = 0.5
 
 
@@ -79,55 +88,53 @@ class Gui(object):
     self.reading_sample_rate = Label(win, text="Sample Rate")
     self.reading_sample_rate.place(x=60, y=80)
     self.reading_timestamp_value = None
-
     self.reading_pressure_inches = Label(win, text="Latest pressure (inH20)")
-    self.reading_pressure_inches.place(x=60, y=500)
+    self.reading_pressure_inches.place(x=60, y=100)
 
     Thread(target=self.timestampDisplayThread, args=[]).start()
 
     self.readings = []
     self.pressure_options = [i for i in range(0, PRESSURE_UPPER_LIMIT + 1)]
-    self.interval_options = [i for i in range(0, INTERVAL_UPPER_LIMIT + 1)]
     self.max_alarm_enabled = BooleanVar(False)
     self.min_alarm_enabled = BooleanVar(False)
 
     self.min_alarm_enabled_checkbox = Checkbutton(win, text="Enabled Min Pressure Alarm", variable=self.min_alarm_enabled)
-    self.min_alarm_enabled_checkbox.place(x=60, y=120)
+    self.min_alarm_enabled_checkbox.place(x=60, y=140)
     self.min_alarm_threshold_label = Label(win, text="Alarm Threshold (cmH20)")
-    self.min_alarm_threshold_label.place(x=60, y=140)
+    self.min_alarm_threshold_label.place(x=60, y=160)
     self.min_alarm_threshold_input = Combobox(win, values=self.pressure_options)
     self.min_alarm_threshold_input.current("0")
-    self.min_alarm_threshold_input.place(x=60, y=160)
+    self.min_alarm_threshold_input.place(x=60, y=180)
     self.min_alarm_interval_label = Label(win, text="Alarm Interval (seconds)")
-    self.min_alarm_interval_label.place(x=60, y=180)
-    self.min_alarm_interval_input = Combobox(win, values=self.interval_options)
+    self.min_alarm_interval_label.place(x=60, y=200)
+    self.min_alarm_interval_input = Combobox(win, values=INTERVAL_LABELS)
     self.min_alarm_interval_input.current("3")
-    self.min_alarm_interval_input.place(x=60, y=200)
+    self.min_alarm_interval_input.place(x=60, y=220)
 
     self.max_alarm_enabled_checkbox = Checkbutton(win, text="Enabled Max Pressure Alarm", variable=self.max_alarm_enabled)
-    self.max_alarm_enabled_checkbox.place(x=60, y=240)
+    self.max_alarm_enabled_checkbox.place(x=60, y=260)
     self.max_alarm_threshold_label = Label(win, text="Maximum Pressure (cmH20)")
-    self.max_alarm_threshold_label.place(x=60, y=260)
+    self.max_alarm_threshold_label.place(x=60, y=280)
     self.max_alarm_threshold_input = Combobox(win, values=self.pressure_options)
     self.max_alarm_threshold_input.current(str(PRESSURE_UPPER_LIMIT))
-    self.max_alarm_threshold_input.place(x=60, y=280)
+    self.max_alarm_threshold_input.place(x=60, y=300)
     self.max_alarm_interval_label = Label(win, text="Alarm Interval (seconds)")
-    self.max_alarm_interval_label.place(x=60, y=300)
-    self.max_alarm_interval_input = Combobox(win, values=self.interval_options)
+    self.max_alarm_interval_label.place(x=60, y=320)
+    self.max_alarm_interval_input = Combobox(win, values=INTERVAL_LABELS)
     self.max_alarm_interval_input.current("3")
-    self.max_alarm_interval_input.place(x=60, y=320)
+    self.max_alarm_interval_input.place(x=60, y=340)
 
 
     self.test_alarm =Button(win, text="Test Alarm", command=self.test_alarm)
-    self.test_alarm.place(x=60, y=360)
+    self.test_alarm.place(x=60, y=380)
     self.clear_alarm =Button(win, text="Clear Alarm", command=self.clear_alarm)
-    self.clear_alarm.place(x=60, y=400)
+    self.clear_alarm.place(x=60, y=420)
 
     self.alarm_active = False
     self.alarm_messages = []
     self.alarms_messages_var = StringVar()
     self.alarms_messages_label = Label(win, textvariable=self.alarms_messages_var, font=("Helvetica", 32))
-    self.alarms_messages_label.place(x=140, y=360)
+    self.alarms_messages_label.place(x=140, y=480)
     self.alarms_messages_label['bg'] = 'lightgrey'
     self.alarms_messages_label['fg'] = 'red'
     
@@ -213,9 +220,9 @@ class Gui(object):
 
     
     now = datetime.now()
-    min_alarm_interval = float(self.min_alarm_interval_input.get())
-    max_alarm_interval = float(self.max_alarm_interval_input.get())
-    self.readings = [r for r in self.readings if ((now - r.stamp).total_seconds() < (2 * max([min_alarm_interval, max_alarm_interval])))]
+    min_alarm_interval = INTERVAL_OPTIONS_MAP[self.min_alarm_interval_input.get()]
+    max_alarm_interval = INTERVAL_OPTIONS_MAP[self.max_alarm_interval_input.get()]
+    self.readings = [r for r in self.readings if ((now - r.stamp).total_seconds() < (2 * MAX_INTERVAL_VALUE))]
 
 
     trigger_max_alert = False
