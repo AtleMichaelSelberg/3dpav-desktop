@@ -264,6 +264,8 @@ def find_needle4(img,center,radius_range,in_ordr=None, return_vec = False):
     out = np.convolve(out, np.ones((N,))/N, mode='same')[N:-N]
     
     # find minimum, which is where the needle is
+    print(111111)
+    print(out)
     out_theta = theta[np.argmin(out)] # N is odd
     
   
