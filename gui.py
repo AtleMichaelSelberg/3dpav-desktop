@@ -28,9 +28,11 @@ baudRate = 115200
 PRESSURE_UPPER_LIMIT = 60
 INTERVAL_UPPER_LIMIT = 10
 
+IMMEDIATE_KEY_WORD = 'IMMEDIATELY'
+IMMEDIATE_INTERVAL = 3
 INTERVAL_OPTIONS = [{
-  'label': 'IMMEDIATELY',
-  'value': 0.1
+  'label': IMMEDIATE_KEY_WORD,
+  'value': IMMEDIATE_INTERVAL
 }] + [{'label': '{0} seconds'.format(i), 'value': float(i)} for i in range(1, 11)]
 INTERVAL_LABELS = [i['label'] for i in INTERVAL_OPTIONS]
 INTERVAL_OPTIONS_MAP = dict([(i['label'], i['value']) for i in INTERVAL_OPTIONS])
@@ -220,23 +222,29 @@ class Gui(object):
 
     
     now = datetime.now()
-    min_alarm_interval = INTERVAL_OPTIONS_MAP[self.min_alarm_interval_input.get()]
-    max_alarm_interval = INTERVAL_OPTIONS_MAP[self.max_alarm_interval_input.get()]
+    min_alarm_label = self.min_alarm_interval_input.get()
+    max_alarm_label = self.max_alarm_interval_input.get()
+    min_alarm_interval = INTERVAL_OPTIONS_MAP[min_alarm_label]
+    max_alarm_interval = INTERVAL_OPTIONS_MAP[max_alarm_label]
     self.readings = [r for r in self.readings if ((now - r.stamp).total_seconds() < (2 * MAX_INTERVAL_VALUE))]
 
 
     trigger_max_alert = False
     if (self.max_alarm_enabled.get()):
       max_samples = [r for r in self.readings if ((now - r.stamp).total_seconds() < max_alarm_interval)]
-      if (len(max_samples) < len(self.readings)):
-        max_threshold = int(self.max_alarm_threshold_input.get())
+      max_threshold = int(self.max_alarm_threshold_input.get())
+      if max_alarm_label == IMMEDIATE_KEY_WORD:
+        trigger_max_alert = len([r for r in max_samples if r.value >= max_threshold]) > 0
+      elif (len(max_samples) < len(self.readings)):
         trigger_max_alert = len([r for r in max_samples if r.value < max_threshold]) == 0
 
     trigger_min_alert = False
     if (self.min_alarm_enabled.get()):
       min_samples = [r for r in self.readings if ((now - r.stamp).total_seconds() < min_alarm_interval)]
-      if (len(min_samples) < len(self.readings)):
-        min_threshold = int(self.min_alarm_threshold_input.get())
+      min_threshold = int(self.min_alarm_threshold_input.get())
+      if min_alarm_label == IMMEDIATE_KEY_WORD:
+        trigger_min_alert = len([r for r in min_samples if r.value <= min_threshold]) > 0
+      elif (len(min_samples) < len(self.readings)):
         trigger_min_alert = len([r for r in min_samples if r.value > min_threshold]) == 0
         
     if trigger_min_alert:
