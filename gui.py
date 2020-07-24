@@ -38,6 +38,11 @@ INTERVAL_LABELS = [i['label'] for i in INTERVAL_OPTIONS]
 INTERVAL_OPTIONS_MAP = dict([(i['label'], i['value']) for i in INTERVAL_OPTIONS])
 MAX_INTERVAL_VALUE = max([i['value'] for i in INTERVAL_OPTIONS])
 
+
+TIMEOUT_OPTIONS = [{'label': '{0} seconds'.format(i), 'value': float(i)} for i in range(1, 11)]
+TIMEOUT_LABELS = [i['label'] for i in TIMEOUT_OPTIONS]
+TIMEOUT_OPTIONS_MAP = dict([(i['label'], i['value']) for i in TIMEOUT_OPTIONS])
+
 LOOP_TIMEOUT_SECONDS = 0.5
 
 
@@ -99,18 +104,20 @@ class Gui(object):
     self.pressure_options = [i for i in range(0, PRESSURE_UPPER_LIMIT + 1)]
     self.max_alarm_enabled = BooleanVar(False)
     self.min_alarm_enabled = BooleanVar(False)
+    self.timeout_alarm_enabled = BooleanVar(False)
+    self.timeout_alarm_enabled.set(True)
 
     self.min_alarm_enabled_checkbox = Checkbutton(win, text="Enabled Min Pressure Alarm", variable=self.min_alarm_enabled)
     self.min_alarm_enabled_checkbox.place(x=60, y=140)
     self.min_alarm_threshold_label = Label(win, text="Alarm Threshold (cmH20)")
     self.min_alarm_threshold_label.place(x=60, y=160)
     self.min_alarm_threshold_input = Combobox(win, values=self.pressure_options)
-    self.min_alarm_threshold_input.current("0")
+    self.min_alarm_threshold_input.current(0)
     self.min_alarm_threshold_input.place(x=60, y=180)
     self.min_alarm_interval_label = Label(win, text="Alarm Interval (seconds)")
     self.min_alarm_interval_label.place(x=60, y=200)
     self.min_alarm_interval_input = Combobox(win, values=INTERVAL_LABELS)
-    self.min_alarm_interval_input.current("3")
+    self.min_alarm_interval_input.current(0)
     self.min_alarm_interval_input.place(x=60, y=220)
 
     self.max_alarm_enabled_checkbox = Checkbutton(win, text="Enabled Max Pressure Alarm", variable=self.max_alarm_enabled)
@@ -118,25 +125,34 @@ class Gui(object):
     self.max_alarm_threshold_label = Label(win, text="Maximum Pressure (cmH20)")
     self.max_alarm_threshold_label.place(x=60, y=280)
     self.max_alarm_threshold_input = Combobox(win, values=self.pressure_options)
-    self.max_alarm_threshold_input.current(str(PRESSURE_UPPER_LIMIT))
+    self.max_alarm_threshold_input.current(len(self.pressure_options) - 1)
     self.max_alarm_threshold_input.place(x=60, y=300)
     self.max_alarm_interval_label = Label(win, text="Alarm Interval (seconds)")
     self.max_alarm_interval_label.place(x=60, y=320)
     self.max_alarm_interval_input = Combobox(win, values=INTERVAL_LABELS)
-    self.max_alarm_interval_input.current("3")
+    self.max_alarm_interval_input.current(0)
     self.max_alarm_interval_input.place(x=60, y=340)
 
 
+    self.timeout_alarm_enabled_checkbox = Checkbutton(win, text="Enabled Lost Signal Alarm", variable=self.timeout_alarm_enabled)
+    self.timeout_alarm_enabled_checkbox.place(x=60, y=380)
+    self.timeout_alarm_interval_label = Label(win, text="Lost Signal Timeout (seconds)")
+    self.timeout_alarm_interval_label.place(x=60, y=400)
+    self.timeout_alarm_interval_input = Combobox(win, values=TIMEOUT_LABELS)
+    self.timeout_alarm_interval_input.current(0)
+    self.timeout_alarm_interval_input.place(x=60, y=420)
+
+
     self.test_alarm =Button(win, text="Test Alarm", command=self.test_alarm)
-    self.test_alarm.place(x=60, y=380)
+    self.test_alarm.place(x=60, y=460)
     self.clear_alarm =Button(win, text="Clear Alarm", command=self.clear_alarm)
-    self.clear_alarm.place(x=60, y=420)
+    self.clear_alarm.place(x=60, y=500)
 
     self.alarm_active = False
     self.alarm_messages = []
     self.alarms_messages_var = StringVar()
     self.alarms_messages_label = Label(win, textvariable=self.alarms_messages_var, font=("Helvetica", 32))
-    self.alarms_messages_label.place(x=140, y=480)
+    self.alarms_messages_label.place(x=140, y=540)
     self.alarms_messages_label['bg'] = 'lightgrey'
     self.alarms_messages_label['fg'] = 'red'
     
@@ -258,6 +274,10 @@ class Gui(object):
     if self.reading_timestamp_value is not None:
       delta_seconds = (datetime.now() - self.reading_timestamp_value).total_seconds()
       self.reading_timestamp.configure(text="Latest reading: {:10.2f} seconds ago".format(delta_seconds))
+      if (self.timeout_alarm_enabled.get()):
+        timeout_threshold = TIMEOUT_OPTIONS_MAP[self.timeout_alarm_interval_input.get()]
+        if delta_seconds > timeout_threshold:
+          self.add_alarm("Signal Lost")
 
   @property 
   def isOk(self):
