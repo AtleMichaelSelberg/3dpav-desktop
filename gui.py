@@ -232,22 +232,20 @@ class Gui(object):
     trigger_max_alert = False
     if (self.max_alarm_enabled.get()):
       max_samples = [r for r in self.readings if ((now - r.stamp).total_seconds() < max_alarm_interval)]
+      max_threshold = int(self.max_alarm_threshold_input.get())
       if max_alarm_label == IMMEDIATE_KEY_WORD:
         trigger_max_alert = len([r for r in max_samples if r.value >= max_threshold]) > 0
-      else:
-        if (len(max_samples) < len(self.readings)):
-          max_threshold = int(self.max_alarm_threshold_input.get())
-          trigger_max_alert = len([r for r in max_samples if r.value < max_threshold]) == 0
+      elif (len(max_samples) < len(self.readings)):
+        trigger_max_alert = len([r for r in max_samples if r.value < max_threshold]) == 0
 
     trigger_min_alert = False
     if (self.min_alarm_enabled.get()):
       min_samples = [r for r in self.readings if ((now - r.stamp).total_seconds() < min_alarm_interval)]
+      min_threshold = int(self.min_alarm_threshold_input.get())
       if min_alarm_label == IMMEDIATE_KEY_WORD:
         trigger_min_alert = len([r for r in min_samples if r.value <= min_threshold]) > 0
-      else:
-        if (len(min_samples) < len(self.readings)):
-          min_threshold = int(self.min_alarm_threshold_input.get())
-          trigger_min_alert = len([r for r in min_samples if r.value > min_threshold]) == 0
+      elif (len(min_samples) < len(self.readings)):
+        trigger_min_alert = len([r for r in min_samples if r.value > min_threshold]) == 0
         
     if trigger_min_alert:
       self.add_alarm("Min Pressure Alarm")
