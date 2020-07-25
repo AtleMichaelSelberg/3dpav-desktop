@@ -191,7 +191,7 @@ class Gui(object):
   def timestampDisplayThread(self):
     while True:
       self.ui_updater_func()
-      time.sleep(0.1)
+      time.sleep(0.01)
 
   def test_alarm(self):
     self.add_alarm("Test Alarm")
@@ -223,7 +223,7 @@ class Gui(object):
           if self.player.playing:
             print('STOP ALERT')
             self.player.pause()
-      time.sleep(0.1)
+      time.sleep(0.01)
 
   def updateReadings(self, state):
     self.readings.append(Reading(state['latestPressureValue'], state['timestamp']))
