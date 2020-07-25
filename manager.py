@@ -46,27 +46,11 @@ class Manager():
             stamps_only = [r.stamp for r in sample_rate_readings]
             self.sampleRate = (max(stamps_only) - min(stamps_only)).total_seconds() / (len(sample_rate_readings) - 1)
 
-        updateParams = {
+        newState = {
             'latestPressureValue': self.latestPressureValue,
             'latestPPeakValue': self.latestPPeakValue,
             'sampleRate': self.sampleRate,
             'timestamp': stamp
         }
-        if (self.gui):
-            Thread(target=self.updateGuiSync, args=[updateParams]).start()
-        if (self.network and self.network.isActive()):
-            Thread(target=self.postToNetworkSync, args=[updateParams]).start()
-
-    def postToNetworkSync(self, params):
-        latestPressureValue = params.get('latestPressureValue')
-        latestPPeakValue = params.get('latestPPeakValue')
-        sampleRate = params.get('sampleRate')
-        timestamp = params.get('timestamp')
-        self.network.updateReadings(timestamp, latestPressureValue)
-
-    def updateGuiSync(self, params):
-        latestPressureValue = params.get('latestPressureValue')
-        latestPPeakValue = params.get('latestPPeakValue')
-        sampleRate = params.get('sampleRate')
-        timestamp = params.get('timestamp')
-        self.gui.updateReadings(timestamp, latestPressureValue, latestPPeakValue, sampleRate)
+        self.network.updateReadings(newState)
+        self.gui.updateReadings(newState)
