@@ -14,7 +14,7 @@ class Network():
     def isActive(self):
         return self.uuid and self.token
 
-    def updateReadings(self, timestamp, latestPressure):
+    def updateReadings(self, state):
         pass
         #r = requests.post(BASE_SERVER_URL + 'post-data-source', data={
         #    'uuid': self.uuid,

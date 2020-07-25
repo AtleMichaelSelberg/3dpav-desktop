@@ -84,7 +84,8 @@ class Gui(object):
     #self.btn_stop.place(x=180, y=310)
 
 
-    self.historical_readings = []
+    self.readings = []
+    self.state = None
 
     self.reading_pressure = Label(win, text="Latest pressure (cmH20)")
     self.reading_pressure.place(x=60, y=20)
@@ -94,13 +95,11 @@ class Gui(object):
     self.reading_timestamp.place(x=60, y=60)
     self.reading_sample_rate = Label(win, text="Sample Rate")
     self.reading_sample_rate.place(x=60, y=80)
-    self.reading_timestamp_value = None
     self.reading_pressure_inches = Label(win, text="Latest pressure (inH20)")
     self.reading_pressure_inches.place(x=60, y=100)
 
     Thread(target=self.timestampDisplayThread, args=[]).start()
 
-    self.readings = []
     self.pressure_options = [i for i in range(0, PRESSURE_UPPER_LIMIT + 1)]
     self.max_alarm_enabled = BooleanVar(False)
     self.min_alarm_enabled = BooleanVar(False)
@@ -191,8 +190,8 @@ class Gui(object):
 
   def timestampDisplayThread(self):
     while True:
-      self.updateTimestampDisplay()
-      time.sleep(0.1)
+      self.ui_updater_func()
+      time.sleep(0.01)
 
   def test_alarm(self):
     self.add_alarm("Test Alarm")
@@ -224,19 +223,27 @@ class Gui(object):
           if self.player.playing:
             print('STOP ALERT')
             self.player.pause()
-      time.sleep(0.1)
+      time.sleep(0.01)
 
-  def updateReadings(self, timestamp, latestPressureValue, latestPPeakValue, sampleRate):
-    self.reading_timestamp_value = timestamp
-    self.readings.append(Reading(latestPressureValue, timestamp))
+  def updateReadings(self, state):
+    self.readings.append(Reading(state['latestPressureValue'], state['timestamp']))
+    self.state = state
+
+  def ui_updater_func(self):
+    state = self.state
+    if state is None:
+      return
+    timestamp = state['timestamp']
+    latestPressureValue = state['latestPressureValue']
+    latestPPeakValue = state['latestPPeakValue']
+    sampleRate = state['sampleRate']
 
     self.reading_pressure.configure(text="Latest Pressure (cmH20): {:10.2f}".format(latestPressureValue))
     self.reading_pressure_inches.configure(text="Latest Pressure (inH20): {:10.2f}".format(latestPressureValue / INCHES_TO_CENIMETERS))
     self.reading_ppeak.configure(text="Latest PPeak (cmH20): {:10.2f}".format(latestPPeakValue))
     self.reading_sample_rate.configure(text="Sample Rate (ms): {:10.2f}".format(sampleRate * 1000))
     self.alarms_messages_var.set(", \n".join(self.alarm_messages))
-
-    
+ 
     now = datetime.now()
     min_alarm_label = self.min_alarm_interval_input.get()
     max_alarm_label = self.max_alarm_interval_input.get()
@@ -268,11 +275,8 @@ class Gui(object):
     if trigger_max_alert:
       self.add_alarm("Max Pressure Alarm")
 
-    self.updateTimestampDisplay()
-
-  def updateTimestampDisplay(self):
-    if self.reading_timestamp_value is not None:
-      delta_seconds = (datetime.now() - self.reading_timestamp_value).total_seconds()
+    if timestamp is not None:
+      delta_seconds = (datetime.now() - timestamp).total_seconds()
       self.reading_timestamp.configure(text="Latest reading: {:10.2f} seconds ago".format(delta_seconds))
       if (self.timeout_alarm_enabled.get()):
         timeout_threshold = TIMEOUT_OPTIONS_MAP[self.timeout_alarm_interval_input.get()]
