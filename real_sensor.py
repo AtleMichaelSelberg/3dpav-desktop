@@ -14,6 +14,9 @@ from find_needle import find_needle4
 
 
 class RealSensor(Sensor):
+    def shutdown(self):
+        cv2.destroyAllWindows()
+
     def __init__(self,manager):
         super().__init__(manager)
         self.find_center_count = 5  # every [find_center_count] frames the gauge self.camera_idx/size is found
