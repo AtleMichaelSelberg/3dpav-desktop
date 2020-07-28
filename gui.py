@@ -97,6 +97,8 @@ class Gui(object):
     self.reading_sample_rate.place(x=60, y=80)
     self.reading_pressure_inches = Label(win, text="Latest pressure (inH20)")
     self.reading_pressure_inches.place(x=60, y=100)
+    self.exit_button = Button(win, text="Close 3DPAV", command=self.exit_application)
+    self.exit_button.place(x=60, y=140)
 
     Thread(target=self.timestampDisplayThread, args=[]).start()
 
@@ -107,51 +109,51 @@ class Gui(object):
     self.timeout_alarm_enabled.set(True)
 
     self.min_alarm_enabled_checkbox = Checkbutton(win, text="Enabled Min Pressure Alarm", variable=self.min_alarm_enabled)
-    self.min_alarm_enabled_checkbox.place(x=60, y=140)
+    self.min_alarm_enabled_checkbox.place(x=60, y=180)
     self.min_alarm_threshold_label = Label(win, text="Alarm Threshold (cmH20)")
-    self.min_alarm_threshold_label.place(x=60, y=160)
+    self.min_alarm_threshold_label.place(x=60, y=200)
     self.min_alarm_threshold_input = Combobox(win, values=self.pressure_options)
     self.min_alarm_threshold_input.current(0)
-    self.min_alarm_threshold_input.place(x=60, y=180)
+    self.min_alarm_threshold_input.place(x=60, y=220)
     self.min_alarm_interval_label = Label(win, text="Alarm Interval (seconds)")
-    self.min_alarm_interval_label.place(x=60, y=200)
+    self.min_alarm_interval_label.place(x=60, y=240)
     self.min_alarm_interval_input = Combobox(win, values=INTERVAL_LABELS)
     self.min_alarm_interval_input.current(0)
-    self.min_alarm_interval_input.place(x=60, y=220)
+    self.min_alarm_interval_input.place(x=60, y=260)
 
     self.max_alarm_enabled_checkbox = Checkbutton(win, text="Enabled Max Pressure Alarm", variable=self.max_alarm_enabled)
-    self.max_alarm_enabled_checkbox.place(x=60, y=260)
+    self.max_alarm_enabled_checkbox.place(x=60, y=300)
     self.max_alarm_threshold_label = Label(win, text="Maximum Pressure (cmH20)")
-    self.max_alarm_threshold_label.place(x=60, y=280)
+    self.max_alarm_threshold_label.place(x=60, y=320)
     self.max_alarm_threshold_input = Combobox(win, values=self.pressure_options)
     self.max_alarm_threshold_input.current(len(self.pressure_options) - 1)
-    self.max_alarm_threshold_input.place(x=60, y=300)
+    self.max_alarm_threshold_input.place(x=60, y=340)
     self.max_alarm_interval_label = Label(win, text="Alarm Interval (seconds)")
-    self.max_alarm_interval_label.place(x=60, y=320)
+    self.max_alarm_interval_label.place(x=60, y=360)
     self.max_alarm_interval_input = Combobox(win, values=INTERVAL_LABELS)
     self.max_alarm_interval_input.current(0)
-    self.max_alarm_interval_input.place(x=60, y=340)
+    self.max_alarm_interval_input.place(x=60, y=380)
 
 
     self.timeout_alarm_enabled_checkbox = Checkbutton(win, text="Enabled Lost Signal Alarm", variable=self.timeout_alarm_enabled)
-    self.timeout_alarm_enabled_checkbox.place(x=60, y=380)
+    self.timeout_alarm_enabled_checkbox.place(x=60, y=420)
     self.timeout_alarm_interval_label = Label(win, text="Lost Signal Timeout (seconds)")
-    self.timeout_alarm_interval_label.place(x=60, y=400)
+    self.timeout_alarm_interval_label.place(x=60, y=440)
     self.timeout_alarm_interval_input = Combobox(win, values=TIMEOUT_LABELS)
     self.timeout_alarm_interval_input.current(0)
-    self.timeout_alarm_interval_input.place(x=60, y=420)
+    self.timeout_alarm_interval_input.place(x=60, y=460)
 
 
-    self.test_alarm =Button(win, text="Test Alarm", command=self.test_alarm)
-    self.test_alarm.place(x=60, y=460)
-    self.clear_alarm =Button(win, text="Clear Alarm", command=self.clear_alarm)
-    self.clear_alarm.place(x=60, y=500)
+    self.test_alarm = Button(win, text="Test Alarm", command=self.test_alarm)
+    self.test_alarm.place(x=60, y=480)
+    self.clear_alarm = Button(win, text="Clear Alarm", command=self.clear_alarm)
+    self.clear_alarm.place(x=60, y=540)
 
     self.alarm_active = False
     self.alarm_messages = []
     self.alarms_messages_var = StringVar()
     self.alarms_messages_label = Label(win, textvariable=self.alarms_messages_var, font=("Helvetica", 32))
-    self.alarms_messages_label.place(x=140, y=540)
+    self.alarms_messages_label.place(x=140, y=580)
     self.alarms_messages_label['bg'] = 'lightgrey'
     self.alarms_messages_label['fg'] = 'red'
     
@@ -176,6 +178,11 @@ class Gui(object):
     self._isOk = False
 
     self.window = win
+
+
+  def exit_application(self):
+    self.window.destroy()
+    self.manager.shutdown()
 
   def boot(self):
     self.window.title('3DPaV Control')

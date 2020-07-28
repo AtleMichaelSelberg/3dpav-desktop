@@ -1,6 +1,7 @@
 from threading import Thread
 from datetime import datetime
 import time
+import os
 
 from settings import INCHES_TO_CENIMETERS, Reading
 
@@ -62,3 +63,6 @@ class Manager():
         }
         self.network.updateReadings(newState)
         self.gui.updateReadings(newState)
+
+    def shutdown(self):
+        os._exit(os.EX_OK)
