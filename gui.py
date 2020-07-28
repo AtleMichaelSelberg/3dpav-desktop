@@ -181,8 +181,10 @@ class Gui(object):
 
 
   def exit_application(self):
-    self.window.destroy()
     self.manager.shutdown()
+
+  def shutdown(self):
+    self.window.destroy()
 
   def boot(self):
     self.window.title('3DPaV Control')

@@ -12,3 +12,6 @@ class FakeSensor(Sensor):
         while True:
             self.manager.updateReadings(random.randint(10, 30))
             time.sleep(0.1)
+
+    def shutdown(self):
+        pass

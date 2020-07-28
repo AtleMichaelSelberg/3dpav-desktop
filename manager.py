@@ -2,6 +2,8 @@ from threading import Thread
 from datetime import datetime
 import time
 import os
+import cv2
+
 
 from settings import INCHES_TO_CENIMETERS, Reading
 
@@ -65,4 +67,6 @@ class Manager():
         self.gui.updateReadings(newState)
 
     def shutdown(self):
+        self.gui.shutdown()
+        self.sensor.shutdown()
         os._exit(os.EX_OK)
