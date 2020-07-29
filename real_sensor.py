@@ -15,7 +15,9 @@ from find_needle import find_needle4
 
 class RealSensor(Sensor):
     def shutdown(self):
-        cv2.destroyAllWindows()
+        if self.live_feed:
+            self.cap.release()
+            cv2.destroyAllWindows()
 
     def __init__(self,manager):
         super().__init__(manager)
