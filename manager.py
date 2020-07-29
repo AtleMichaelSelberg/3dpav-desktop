@@ -69,4 +69,4 @@ class Manager():
     def shutdown(self):
         self.gui.shutdown()
         self.sensor.shutdown()
-        os._exit(os.EX_OK)
+        os._exit(getattr(os, 'EX_OK',  0))
