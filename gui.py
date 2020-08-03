@@ -52,34 +52,34 @@ class Gui(object):
     self.manager = manager 
     self.debug = debug
     #self.lab=Label(win, text="Serial port:")
-    #self.lab.place(x=60, y=20)
+    #self.lab.place(x=30, y=20)
     #self.txtfld=Entry(win, text="Serial port")
-    #self.txtfld.place(x=150, y=20)
+    #self.txtfld.place(x=300, y=20)
     #self.btn_cnct=Button(win, text="Connect printer", command=self.connect)
-    #self.btn_cnct.place(x=60, y=50)
+    #self.btn_cnct.place(x=30, y=50)
     #self.btn_init=Button(win, text="Initialize", command=self.initialize, state=DISABLED)
-    #self.btn_init.place(x=60, y=90)
+    #self.btn_init.place(x=30, y=90)
 
     #self.tidal_vol=("300","400","500","750","900","1000")
     #self.lab_tv=Label(win, text='Tidal volume:')
-    #self.lab_tv.place(x=60, y=180)
+    #self.lab_tv.place(x=30, y=180)
     #self.tv=Combobox(win, values=self.tidal_vol)
     #self.tv.place(x=240, y=180)
 
     #self.resp_rate=("12","16","20","32")
     #self.lab_rr=Label(win, text='Respiratory rate:')
-    #self.lab_rr.place(x=60, y=210)
+    #self.lab_rr.place(x=30, y=210)
     #self.rr=Combobox(win, values=self.resp_rate)
     #self.rr.place(x=240, y=210)
 
     #self.insp_exp=("1:2")
     #self.lab_ie=Label(win, text='Inspiratory/expiratory:')
-    #self.lab_ie.place(x=60, y=240)
+    #self.lab_ie.place(x=30, y=240)
     #self.ie=Combobox(win, values=self.insp_exp)
     #self.ie.place(x=240, y=240)
 
     #self.btn_run=Button(win, text="Run Ventilation", command=self.start_run,state=DISABLED)
-    #self.btn_run.place(x=60, y=310)
+    #self.btn_run.place(x=30, y=310)
     #self.btn_stop=Button(win, text="Stop",command=self.stop,state=DISABLED)
     #self.btn_stop.place(x=180, y=310)
 
@@ -87,18 +87,18 @@ class Gui(object):
     self.readings = []
     self.state = None
 
-    self.reading_pressure = Label(win, text="Latest pressure (cmH20)")
-    self.reading_pressure.place(x=60, y=20)
-    self.reading_ppeak = Label(win, text="Latest PPeak (cmH20)")
-    self.reading_ppeak.place(x=60, y=40)
+    self.reading_pressure = Label(win, text="Latest pressure (cmH2O)", font=("Helvetica", 18))
+    self.reading_pressure.place(x=30, y=20)
+    self.reading_ppeak = Label(win, text="Latest PPeak (cmH2O)", font=("Helvetica", 18))
+    self.reading_ppeak.place(x=35, y=50)
     self.reading_timestamp = Label(win, text="Latest reading age (seconds)")
-    self.reading_timestamp.place(x=60, y=60)
+    self.reading_timestamp.place(x=30, y=90)
     self.reading_sample_rate = Label(win, text="Sample Rate")
-    self.reading_sample_rate.place(x=60, y=80)
-    self.reading_pressure_inches = Label(win, text="Latest pressure (inH20)")
-    self.reading_pressure_inches.place(x=60, y=100)
-    self.exit_button = Button(win, text="Close 3DPAV", command=self.exit_application)
-    self.exit_button.place(x=60, y=140)
+    self.reading_sample_rate.place(x=30, y=110)
+    self.reading_pressure_inches = Label(win, text="Latest pressure (inH2O)")
+    self.reading_pressure_inches.place(x=30, y=130)
+    self.exit_button = Button(win, text="Close App", command=self.exit_application)
+    self.exit_button.place(x=460, y=1)
 
     Thread(target=self.timestampDisplayThread, args=[]).start()
 
@@ -109,51 +109,51 @@ class Gui(object):
     self.timeout_alarm_enabled.set(True)
 
     self.min_alarm_enabled_checkbox = Checkbutton(win, text="Enabled Min Pressure Alarm", variable=self.min_alarm_enabled)
-    self.min_alarm_enabled_checkbox.place(x=60, y=180)
-    self.min_alarm_threshold_label = Label(win, text="Alarm Threshold (cmH20)")
-    self.min_alarm_threshold_label.place(x=60, y=200)
+    self.min_alarm_enabled_checkbox.place(x=30, y=160)
+    self.min_alarm_threshold_label = Label(win, text="Minimum Pressure (cmH2O)")
+    self.min_alarm_threshold_label.place(x=30, y=180)
     self.min_alarm_threshold_input = Combobox(win, values=self.pressure_options)
     self.min_alarm_threshold_input.current(0)
-    self.min_alarm_threshold_input.place(x=60, y=220)
+    self.min_alarm_threshold_input.place(x=30, y=200)
     self.min_alarm_interval_label = Label(win, text="Alarm Interval (seconds)")
-    self.min_alarm_interval_label.place(x=60, y=240)
+    self.min_alarm_interval_label.place(x=30, y=225)
     self.min_alarm_interval_input = Combobox(win, values=INTERVAL_LABELS)
     self.min_alarm_interval_input.current(0)
-    self.min_alarm_interval_input.place(x=60, y=260)
+    self.min_alarm_interval_input.place(x=30, y=245)
 
     self.max_alarm_enabled_checkbox = Checkbutton(win, text="Enabled Max Pressure Alarm", variable=self.max_alarm_enabled)
-    self.max_alarm_enabled_checkbox.place(x=60, y=300)
-    self.max_alarm_threshold_label = Label(win, text="Maximum Pressure (cmH20)")
-    self.max_alarm_threshold_label.place(x=60, y=320)
+    self.max_alarm_enabled_checkbox.place(x=280, y=160)
+    self.max_alarm_threshold_label = Label(win, text="Maximum Pressure (cmH2O)")
+    self.max_alarm_threshold_label.place(x=280, y=180)
     self.max_alarm_threshold_input = Combobox(win, values=self.pressure_options)
-    self.max_alarm_threshold_input.current(len(self.pressure_options) - 1)
-    self.max_alarm_threshold_input.place(x=60, y=340)
+    self.max_alarm_threshold_input.current(len(self.pressure_options) - 31)
+    self.max_alarm_threshold_input.place(x=280, y=200)
     self.max_alarm_interval_label = Label(win, text="Alarm Interval (seconds)")
-    self.max_alarm_interval_label.place(x=60, y=360)
+    self.max_alarm_interval_label.place(x=280, y=225)
     self.max_alarm_interval_input = Combobox(win, values=INTERVAL_LABELS)
     self.max_alarm_interval_input.current(0)
-    self.max_alarm_interval_input.place(x=60, y=380)
+    self.max_alarm_interval_input.place(x=280, y=245)
 
 
     self.timeout_alarm_enabled_checkbox = Checkbutton(win, text="Enabled Lost Signal Alarm", variable=self.timeout_alarm_enabled)
-    self.timeout_alarm_enabled_checkbox.place(x=60, y=420)
+    self.timeout_alarm_enabled_checkbox.place(x=30, y=280)
     self.timeout_alarm_interval_label = Label(win, text="Lost Signal Timeout (seconds)")
-    self.timeout_alarm_interval_label.place(x=60, y=440)
+    self.timeout_alarm_interval_label.place(x=30, y=300)
     self.timeout_alarm_interval_input = Combobox(win, values=TIMEOUT_LABELS)
     self.timeout_alarm_interval_input.current(0)
-    self.timeout_alarm_interval_input.place(x=60, y=460)
+    self.timeout_alarm_interval_input.place(x=30, y=320)
 
 
     self.test_alarm = Button(win, text="Test Alarm", command=self.test_alarm)
-    self.test_alarm.place(x=60, y=480)
+    self.test_alarm.place(x=30, y=500)
     self.clear_alarm = Button(win, text="Clear Alarm", command=self.clear_alarm)
-    self.clear_alarm.place(x=60, y=540)
+    self.clear_alarm.place(x=30, y=530)
 
     self.alarm_active = False
     self.alarm_messages = []
     self.alarms_messages_var = StringVar()
     self.alarms_messages_label = Label(win, textvariable=self.alarms_messages_var, font=("Helvetica", 32))
-    self.alarms_messages_label.place(x=140, y=580)
+    self.alarms_messages_label.place(x=30, y=350)
     self.alarms_messages_label['bg'] = 'lightgrey'
     self.alarms_messages_label['fg'] = 'red'
     
@@ -187,7 +187,7 @@ class Gui(object):
     self.window.destroy()
 
   def boot(self):
-    self.window.title('3DPaV Control')
+    self.window.title('3DPaV Pressure Monitor')
     self.window.geometry("529x564+0+0")
     self.window.mainloop()
 
@@ -247,9 +247,9 @@ class Gui(object):
     latestPPeakValue = state['latestPPeakValue']
     sampleRate = state['sampleRate']
 
-    self.reading_pressure.configure(text="Latest Pressure (cmH20): {:10.2f}".format(latestPressureValue))
-    self.reading_pressure_inches.configure(text="Latest Pressure (inH20): {:10.2f}".format(latestPressureValue / INCHES_TO_CENIMETERS))
-    self.reading_ppeak.configure(text="Latest PPeak (cmH20): {:10.2f}".format(latestPPeakValue))
+    self.reading_pressure.configure(text="Latest Pressure (cmH2O): {:10.2f}".format(latestPressureValue))
+    self.reading_pressure_inches.configure(text="Latest Pressure (inH2O): {:10.2f}".format(latestPressureValue / INCHES_TO_CENIMETERS))
+    self.reading_ppeak.configure(text="Latest PPeak (cmH2O):    {:10.2f}".format(latestPPeakValue))
     self.reading_sample_rate.configure(text="Sample Rate (ms): {:10.2f}".format(sampleRate * 1000))
     self.alarms_messages_var.set(", \n".join(self.alarm_messages))
  
