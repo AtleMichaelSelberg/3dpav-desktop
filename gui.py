@@ -18,7 +18,7 @@ from settings import INCHES_TO_CENIMETERS, Reading
 
 
 # read_timeout is depends on port speed
-# with following formula it workfs:
+# with following formula it works:
 # 0.1 sec + 1.0 sec / baud rate (bits per second) * 10.0 bits (per character) * 10.0 times
 # example for 115200 baud rate:
 # 0.1 + 1.0 / 115200 * 10.0 * 10.0 ~ 0.1 sec

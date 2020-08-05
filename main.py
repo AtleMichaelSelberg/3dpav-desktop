@@ -20,7 +20,7 @@ DEMO_DEVICE_TOKEN = 'JqHJ1jHGnOOyt1DHt7LtlSQskNfvNrbGM3YALl7QxyW9wjjJ6oE0pderEZY
 window = Tk()
 manager = Manager()
 
-sensor = FakeSensor(manager)
+sensor = RealSensor(manager)
 gui = Gui(manager, window, False)
 network = Network(manager)
 
