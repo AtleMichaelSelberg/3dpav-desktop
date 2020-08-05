@@ -46,6 +46,8 @@ TIMEOUT_OPTIONS_MAP = dict([(i['label'], i['value']) for i in TIMEOUT_OPTIONS])
 LOOP_TIMEOUT_SECONDS = 0.5
 
 
+def makeCheckbox(win, text, variable):
+  return Checkbutton(win, padx=5, height=3, text=text, variable=variable)
 
 class Gui(object):
   def __init__(self, manager, win, debug=False):
@@ -108,40 +110,40 @@ class Gui(object):
     self.timeout_alarm_enabled = BooleanVar(False)
     self.timeout_alarm_enabled.set(True)
 
-    self.min_alarm_enabled_checkbox = Checkbutton(win, text="Enabled Min Pressure Alarm", variable=self.min_alarm_enabled)
+    self.min_alarm_enabled_checkbox = makeCheckbox(win, "Enabled Min Pressure Alarm", self.min_alarm_enabled)
     self.min_alarm_enabled_checkbox.place(x=30, y=160)
     self.min_alarm_threshold_label = Label(win, text="Minimum Pressure (cmH2O)")
-    self.min_alarm_threshold_label.place(x=30, y=180)
+    self.min_alarm_threshold_label.place(x=30, y=220)
     self.min_alarm_threshold_input = Combobox(win, values=self.pressure_options)
     self.min_alarm_threshold_input.current(0)
-    self.min_alarm_threshold_input.place(x=30, y=200)
+    self.min_alarm_threshold_input.place(x=30, y=240)
     self.min_alarm_interval_label = Label(win, text="Alarm Interval (seconds)")
-    self.min_alarm_interval_label.place(x=30, y=225)
+    self.min_alarm_interval_label.place(x=30, y=265)
     self.min_alarm_interval_input = Combobox(win, values=INTERVAL_LABELS)
     self.min_alarm_interval_input.current(0)
-    self.min_alarm_interval_input.place(x=30, y=245)
+    self.min_alarm_interval_input.place(x=30, y=285)
 
-    self.max_alarm_enabled_checkbox = Checkbutton(win, text="Enabled Max Pressure Alarm", variable=self.max_alarm_enabled)
+    self.max_alarm_enabled_checkbox = makeCheckbox(win,"Enabled Max Pressure Alarm", self.max_alarm_enabled)
     self.max_alarm_enabled_checkbox.place(x=280, y=160)
     self.max_alarm_threshold_label = Label(win, text="Maximum Pressure (cmH2O)")
-    self.max_alarm_threshold_label.place(x=280, y=180)
+    self.max_alarm_threshold_label.place(x=280, y=220)
     self.max_alarm_threshold_input = Combobox(win, values=self.pressure_options)
     self.max_alarm_threshold_input.current(len(self.pressure_options) - 31)
-    self.max_alarm_threshold_input.place(x=280, y=200)
+    self.max_alarm_threshold_input.place(x=280, y=240)
     self.max_alarm_interval_label = Label(win, text="Alarm Interval (seconds)")
-    self.max_alarm_interval_label.place(x=280, y=225)
+    self.max_alarm_interval_label.place(x=280, y=265)
     self.max_alarm_interval_input = Combobox(win, values=INTERVAL_LABELS)
     self.max_alarm_interval_input.current(0)
-    self.max_alarm_interval_input.place(x=280, y=245)
+    self.max_alarm_interval_input.place(x=280, y=285)
 
 
-    self.timeout_alarm_enabled_checkbox = Checkbutton(win, text="Enabled Lost Signal Alarm", variable=self.timeout_alarm_enabled)
-    self.timeout_alarm_enabled_checkbox.place(x=30, y=280)
+    self.timeout_alarm_enabled_checkbox = makeCheckbox(win, "Enabled Lost Signal Alarm", self.timeout_alarm_enabled)
+    self.timeout_alarm_enabled_checkbox.place(x=30, y=320)
     self.timeout_alarm_interval_label = Label(win, text="Lost Signal Timeout (seconds)")
-    self.timeout_alarm_interval_label.place(x=30, y=300)
+    self.timeout_alarm_interval_label.place(x=30, y=380)
     self.timeout_alarm_interval_input = Combobox(win, values=TIMEOUT_LABELS)
     self.timeout_alarm_interval_input.current(0)
-    self.timeout_alarm_interval_input.place(x=30, y=320)
+    self.timeout_alarm_interval_input.place(x=30, y=400)
 
 
     self.test_alarm = Button(win, text="Test Alarm", command=self.test_alarm)
@@ -153,7 +155,7 @@ class Gui(object):
     self.alarm_messages = []
     self.alarms_messages_var = StringVar()
     self.alarms_messages_label = Label(win, textvariable=self.alarms_messages_var, font=("Helvetica", 32))
-    self.alarms_messages_label.place(x=30, y=350)
+    self.alarms_messages_label.place(x=200, y=440)
     self.alarms_messages_label['bg'] = 'lightgrey'
     self.alarms_messages_label['fg'] = 'red'
     
