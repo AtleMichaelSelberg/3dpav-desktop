@@ -147,15 +147,15 @@ class Gui(object):
 
 
     self.test_alarm = Button(win, text="Test Alarm", command=self.test_alarm)
-    self.test_alarm.place(x=30, y=500)
+    self.test_alarm.place(x=285, y=365)
     self.clear_alarm = Button(win, text="Clear Alarm", command=self.clear_alarm)
-    self.clear_alarm.place(x=30, y=530)
+    self.clear_alarm.place(x=285, y=395)
 
     self.alarm_active = False
     self.alarm_messages = []
     self.alarms_messages_var = StringVar()
     self.alarms_messages_label = Label(win, textvariable=self.alarms_messages_var, font=("Helvetica", 32))
-    self.alarms_messages_label.place(x=200, y=440)
+    self.alarms_messages_label.place(x=30, y=440)
     self.alarms_messages_label['bg'] = 'lightgrey'
     self.alarms_messages_label['fg'] = 'red'
     
